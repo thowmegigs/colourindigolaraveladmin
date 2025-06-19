@@ -152,7 +152,7 @@ class NewCouponController extends Controller
                 'tag' => 'input',
                 'type' => 'text',
                 'default' => isset($model) ? $model->code : "",
-                'attr' => []
+                'attr' => [],'col'=>6
             ],
             [
                 'placeholder' => 'Enter short_description',
@@ -161,7 +161,7 @@ class NewCouponController extends Controller
                 'tag' => 'input',
                 'type' => 'text',
                 'default' => isset($model) ? $model->short_description : "",
-                'attr' => []
+                'attr' => [],'col'=>6
             ],
             [
                 'placeholder' => 'Enter description',
@@ -170,7 +170,7 @@ class NewCouponController extends Controller
                 'tag' => 'textarea',
                 'type' => 'textarea',
                 'default' => isset($model) ? $model->description : "",
-                'attr' => []
+                'attr' => [],'col'=>6
             ],
             [
                 'placeholder' => 'Enter cart_amount',
@@ -179,7 +179,7 @@ class NewCouponController extends Controller
                 'tag' => 'input',
                 'type' => 'number',
                 'default' => isset($model) ? $model->cart_amount : "",
-                'attr' => []
+                'attr' => [],'col'=>6
             ],
             [
                 'placeholder' => 'Enter usage_limit_per_user',
@@ -188,7 +188,7 @@ class NewCouponController extends Controller
                 'tag' => 'input',
                 'type' => 'number',
                 'default' => isset($model) ? $model->usage_limit_per_user : "",
-                'attr' => []
+                'attr' => [],'col'=>6
             ],
             [
                 'placeholder' => 'Enter discount',
@@ -197,7 +197,7 @@ class NewCouponController extends Controller
                 'tag' => 'input',
                 'type' => 'number',
                 'default' => isset($model) ? $model->discount : "",
-                'attr' => []
+                'attr' => [],'col'=>6
             ],
             [
                 'placeholder' => 'Enter start_date',
@@ -206,7 +206,7 @@ class NewCouponController extends Controller
                 'tag' => 'input',
                 'type' => 'date',
                 'default' => isset($model) ? $model->start_date : "",
-                'attr' => []
+                'attr' => [],'col'=>6
             ],
             [
                 'placeholder' => 'Enter end_date',
@@ -215,11 +215,33 @@ class NewCouponController extends Controller
                 'tag' => 'input',
                 'type' => 'date',
                 'default' => isset($model) ? $model->end_date : "",
-                'attr' => []
-            ]
+                'attr' => [],'col'=>6
+            ],
+              [
+                        'name' => 'status',
+                        'label' => 'Status',
+                        'tag' => 'input',
+                        'type' => 'radio',
+                        'default' => isset($model) && isset($model->status) ? $model->status : 'Active',
+                        'attr' => [],
+                        'value' => [
+                            (object) [
+                                'label' => 'Active',
+                                'value' => 'Active',
+                            ],
+                            (object) [
+                                'label' => 'In-Active',
+                                'value' => 'In-Active',
+                            ],
+                        ],
+                        'has_toggle_div' => [],
+                        'multiple' => false,
+                        'inline' => true,'col'=>6
+                    ],
         ]
     ]
 ];
+// dd($data[0]['inputs']);
         if (count($this->form_image_field_name) > 0) {
             foreach ($this->form_image_field_name as $g) {
                 $y = [

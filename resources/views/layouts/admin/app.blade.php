@@ -74,6 +74,13 @@ if (str_contains($host, 'vendor')) {
     padding: 8px 6px!important;
   
 }
+.flatpickr-rContainer{
+    background:white!important;
+}
+.flatpickr-calendar.open{
+    width:238px!important;
+
+}
     .select2-container .select2-selection--single {
    
     height: 39px!important;
