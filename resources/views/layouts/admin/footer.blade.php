@@ -39,7 +39,7 @@
 <script src="{{ asset('commonjs/repeatable_json_related.js') }}?v=4"></script>
 <script src="{{ asset('commonjs/file_input_related.js') }}?v=3"></script>
 <script src="{{ asset('commonjs/selection_related.js') }}?v=1"></script>
-<script src="{{ asset('commonjs/custom.js') }}?v=1"></script>
+<script src="{{ asset('commonjs/custom.js') }}?v=2"></script>
 
 <script src="{{asset('assets/js/app.js')}}"></script>
 @if(request()->segment(2)=='dashboard' || request()->segment(1)=='dashboard')

@@ -148,3 +148,16 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::post('reviews', [App\Http\Controllers\ReviewController::class,'store']);
+Route::get('/app-version', function (Request $request) {
+     $version = \DB::table('app_sersion')->first();
+
+    if (!$version) {
+        return response()->json(['error' => 'Version not found'], 404);
+    }
+
+    return response()->json([
+        'latest_version' => $version->version,
+        'update_type' => '',/***force,optional */
+       
+    ]);
+});

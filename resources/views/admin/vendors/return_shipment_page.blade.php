@@ -131,7 +131,7 @@
             
               class=" btn btn-sm btn-primary">Ship Now</a>
               @else
-              <span class="bg-success text-success">Order Shipped</span>
+              <span class="bg-success text-white px-2 py-1">Transferred</span>
               @endif
            </td>
 

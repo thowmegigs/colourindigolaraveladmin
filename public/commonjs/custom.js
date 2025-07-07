@@ -33,6 +33,20 @@ location.reload()
         )
    
 }
+function updateRefundStatus(id,status) {
+   const success=(res)=>{
+location.reload()
+   }
+        objectAjaxNoLoaderNoAlert(
+            { id, table: 'return_items',field:'refund_status',val:status },
+            '/singleFieldUpdateFromTable',
+            callbackSuccess = success,
+            callbackError = undefined,
+            method = "POST",
+            show_error_in_alert = true
+        )
+   
+}
 
 
 

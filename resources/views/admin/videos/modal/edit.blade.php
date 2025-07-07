@@ -15,7 +15,7 @@
                                      class="form-control" >
                                     <x-singleFile 
                                     :fileName="$item->name"
-                                modelName="VideoFile" 
+                                     modelName="VideoFile" 
                                     folderName="videos" 
                                     fieldName="name"
                                     :rowid="$item->id"
@@ -23,11 +23,11 @@
                                 </div></div>
                                 <div class="col">
                                 <div class="mb-3">
-                                    <label for="collection[]" class="form-label">Collections</label>
-                                    <select name="collection_id[]" class="form-select select2" >
-                                            <option value="">Select Colection</option>
-                                        @foreach($collections as $col)
-                                        <option value="{{$col->id}}" @if($item->collection_id && $item->collection_id==$col->id) selected @endif>{{$col->name}}</option>
+                                    <label for="product" class="form-label">Products</label>
+                                    <select name="product_ids[]" class="form-select select2" >
+                                            <option value="">Select Products</option>
+                                        @foreach($products as $col)
+                                        <option value="{{$col->id}}" @if($item->product_id && $item->product_id==$col->id) selected @endif>{{$col->name}}</option>
                                         @endforeach
                                         </select>
                                 </div>

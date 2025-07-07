@@ -7,13 +7,17 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AppVersionController;
 use App\Http\Controllers\Api\ReturnController;
 use App\Http\Controllers\ReturnItemsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FileManagerController;
 use App\Http\Controllers\ShiprocketWebhookController;
+use App\Http\Controllers\ImageUploadController;
 
 
+Route::get('/upload', [ImageUploadController::class, 'showForm']);
+Route::post('/upload', [ImageUploadController::class, 'doUpload'])->name('upload.image');
 Route::controller(ReturnController::class)->group(function () {
         // Route::get('categories', 'index');
          Route::post('return_upload', 'upload1'); 
@@ -99,6 +103,8 @@ Route::post('/email/verification-notification', function (Request $request) {
 $sharedDomains = ['admin.colourindigo.com', 'vendor.colourindigo.com'];
 Route::domain('admin.colourindigo.com')->group(function () {
         Route::middleware(['admin'])->group(function () {
+       Route::resource('app-versions', AppVersionController::class)->only(['index', 'edit', 'update']);
+
           Route::controller(FrontendController::class)->group(function () {
             Route::get('/',  'index');
             Route::get('/clear_cache',  'clear_cache')->name('clear_cache');

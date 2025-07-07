@@ -10,14 +10,15 @@
                         </div></div>
                         <div class="col">
                         <div class="mb-3">
-                            <label for="collection[]" class="form-label">Collections</label>
-                            <select name="collection_id[]" class="form-select select2" >
-                                    <option value="">Select Colection</option>
-                                   @foreach($collections as $col)
+                            <label for="product_id" class="form-label">Select Product</label>
+                            <select name="product_ids[]" class="form-select select2" >
+                                    <option value="">Select Product</option>
+                                   @foreach($products as $col)
                                    <option value="{{$col->id}}">{{$col->name}}</option>
                                    @endforeach
                                 </select>
                         </div>
+                        
                         </div>
                         <button type="button" class="btn btn-icon btn-danger btn-sm remove-item position-absolute top-0 end-0 m-2 d-none"><i class="mdi mdi-minus"></i></button>
                     </div>

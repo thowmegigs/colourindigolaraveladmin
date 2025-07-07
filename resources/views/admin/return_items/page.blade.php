@@ -157,7 +157,16 @@
                 <a type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal{{ $r->id }}">
                    View More
                 </a>
+                  @if($r->type=='Return')
+                @if($r->refund_status=='Pending')
+                    <button type="button" class="btn btn-info btn-sm" 
+                    onClick="updateRefundStatus('{!!$r->id!!}','{!!$r->refund_status=='Pending'?'Completed':'Pending'!!}')"  >
+                    {{$r->refund_status=='Pending'?'Refund Paid':'Refund Unpaid'}}
+                </button>
+                @endif
+                @endif
             </td>
+            
         </tr>
     @endforeach
 

@@ -70,6 +70,31 @@
                             </a>
                         </li>
                     @endif
+                      @if (auth()->user()->hasRole(['Admin']) || auth()->user()->can('videos'))
+                        <li class="nav-item @if ($last_uri == 'videos') active @endif">
+                            <a href="{{ domain_route('videos.index') }}" class="nav-link">
+
+                                <div data-i18n="Calendar">Manage Videos</div>
+                            </a>
+                        </li>
+                    @endif
+                      @if (auth()->user()->hasRole(['Admin']))
+                        <li class="nav-item @if ($last_uri == 'website_sliders') active @endif">
+                            <a href="{{ domain_route('website_sliders.index') }}" class="nav-link">
+
+                                <div data-i18n="Calendar">Manage Sliders</div>
+                            </a>
+                        </li>
+                    @endif
+                      @if (auth()->user()->hasRole(['Admin']) || auth()->user()->can('list_attributes'))
+                        <li class="nav-item @if ($last_uri == 'website_banners') active @endif">
+                            <a href="{{ domain_route('website_banners.index') }}" class="nav-link">
+
+                                <div data-i18n="Calendar">Manage Banners</div>
+                            </a>
+                        </li>
+                    @endif
+                    
                     
                     
                     
@@ -185,6 +210,22 @@
             </a>
         </li>
     @endif
+   
+   
+    @if (auth()->id())
+        <li class="nav-item">
+            <a class="nav-link menu-link  @if ($last_uri == 'payments') active @endif" href="/website_content_sections">
+                <i class="mdi mdi-credit-card-outline"></i> <span data-key="t-widgets">Website Front</span>
+            </a>
+        </li>
+    @endif
+    @if (auth()->id())
+        <li class="nav-item">
+            <a class="nav-link menu-link  @if ($last_uri == 'payments') active @endif" href="/content_sections">
+                <i class="mdi mdi-credit-card-outline"></i> <span data-key="t-widgets">App Front</span>
+            </a>
+        </li>
+    @endif
     
    
    
@@ -232,61 +273,7 @@
    
     
    
-        <li class="nav-item">
-            <a class="nav-link menu-link" href="#sidebarDashboards78" data-bs-toggle="collapse" role="button"
-                aria-expanded="false" aria-controls="sidebarDashboards">
-                <i class="mdi mdi-cog-outline"></i> <span data-key="t-dashboards">Website Settings</span>
-            </a>
-
-            <div class="collapse menu-dropdown" id="sidebarDashboards78">
-                <ul class="nav nav-sm flex-column">
-                    @if (auth()->user()->hasRole(['Admin']) || auth()->user()->can('list_settings'))
-                        {{--  <li class="nav-item @if ($last_uri == 'settings') active @endif">
-                        <a href="{{ domain_route('settings.index') }}" class="nav-link">
-
-                            <div data-i18n="Calendar">General Setting</div>
-                        </a>
-                    </li> --}}
-                    @endif
-
-
-                      <li class="nav-item @if ($last_uri == 'brands') active @endif">
-                            <a href="{{ domain_route('videos.index') }}" class="nav-link">
-
-                                <div data-i18n="Calendar">Manage Videos</div>
-                            </a>
-                        </li>
-                    @if (auth()->user()->hasRole(['Admin']) || auth()->user()->can('list_banners'))
-                        <li class="nav-item @if ($last_uri == 'website_banners') active @endif">
-                            <a href="{{ domain_route('website_banners.index') }}" class="nav-link">
-
-                                <div data-i18n="Calendar">Manage Banners</div>
-                            </a>
-                        </li>
-                    @endif
-                    @if (auth()->user()->hasRole(['Admin']) || auth()->user()->can('list_banners'))
-                        <li class="nav-item @if ($last_uri == 'website_banners') active @endif">
-                            <a href="{{ domain_route('website_sliders.index') }}" class="nav-link">
-
-                                <div data-i18n="Calendar">Manage Sliders</div>
-                            </a>
-                        </li>
-                    @endif
-                    @if (auth()->user()->hasRole(['Admin']) || auth()->user()->can('list_content_sections'))
-                        <li class="nav-item @if ($last_uri == 'content_sections') active @endif">
-                            <a href="{{ domain_route('content_sections.index') }}" class="nav-link">
-
-                                <div data-i18n="Calendar">Manage Content Sections</div>
-                            </a>
-                        </li>
-                    @endif
-
-
-
-                </ul>
-            </div>
-        </li>
-
+      
 
 
       
@@ -294,50 +281,7 @@
    
    
 
-    @if (auth()->id())
-        <li class="nav-item">
-            <a class="nav-link menu-link" href="#sidebarDashboards5" data-bs-toggle="collapse" role="button"
-                aria-expanded="false" aria-controls="sidebarDashboards">
-                <i class="mdi mdi-cog-outline"></i> <span data-key="t-dashboards">App Settings</span>
-            </a>
-
-            <div class="collapse menu-dropdown" id="sidebarDashboards5">
-                <ul class="nav nav-sm flex-column">
-
-                    @if (auth()->user()->hasRole(['Admin']) || auth()->user()->can('list_sliders'))
-                        <li class="nav-item @if ($last_uri == 'sliders') active @endif">
-                            <a href="{{ domain_route('sliders.index') }}" class="nav-link">
-
-                                <div data-i18n="Calendar">Manage Sliders</div>
-                            </a>
-                        </li>
-                    @endif
-
-
-                    @if (auth()->user()->hasRole(['Admin']) || auth()->user()->can('list_banners'))
-                        <li class="nav-item @if ($last_uri == 'banners') active @endif">
-                            <a href="{{ domain_route('banners.index') }}" class="nav-link">
-
-                                <div data-i18n="Calendar">Manage Banners</div>
-                            </a>
-                        </li>
-                    @endif
-
-                    @if (auth()->user()->hasRole(['Admin']) || auth()->user()->can('list_content_sections'))
-                        <li class="nav-item @if ($last_uri == 'website_content_sections') active @endif">
-                            <a href="{{ domain_route('website_content_sections.index') }}" class="nav-link">
-
-                                <div data-i18n="Calendar">Manage Content Sections</div>
-                            </a>
-                        </li>
-                    @endif
-
-
-
-                </ul>
-            </div>
-        </li>
-    @endif
+   
 
 </ul>
 
