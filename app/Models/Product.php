@@ -31,27 +31,30 @@ class Product extends Model
     public function setNameAttribute($value)
     {
         $this->attributes['name'] = $value;
-        $this->attributes['slug'] = \Str::slug($value);
+         if (!array_key_exists('slug', $this->attributes) || empty($this->attributes['slug'])) {
+            $this->attributes['slug'] = \Str::slug($value) .'-'.\Str::lower(\Str::random(6));
+        }
+        $this->attributes['uuid'] =  intval(microtime(true));
     }
 
-    protected static function booted(): void
-    {
-        static::creating(function ($product) {
-            $product->sku = $product->sku?$product->sku:self::generateSku($product);
-        });
+    // protected static function booted(): void
+    // {
+    //     static::creating(function ($product) {
+    //         $product->sku = $product->sku?$product->sku:self::generateSku($product);
+    //     });
 
        
-    }
+    // }
 
-    public static function generateSku($product)
-    {
-        $categoryCode = strtoupper(substr($product->category->name ?? 'GEN', 0, 2));
-        $brandCode = strtoupper(substr($product->brand->name ?? 'NB', 0, 2));
-        $count = self::where('category_id', $product->category_id)->count() + 1;
-        $increment = str_pad($count, 4, '0', STR_PAD_LEFT);
+    // public static function generateSku($product)
+    // {
+    //     $categoryCode = strtoupper(substr($product->category->name ?? 'GEN', 0, 2));
+    //     $brandCode = strtoupper(substr($product->brand->name ?? 'NB', 0, 2));
+    //     $count = self::where('category_id', $product->category_id)->count() + 1;
+    //     $increment = str_pad($count, 4, '0', STR_PAD_LEFT);
 
-        return "S{$categoryCode}-{$brandCode}-{$increment}";
-    }
+    //     return "S{$categoryCode}-{$brandCode}-{$increment}";
+    // }
 
     public function category(): BelongsTo
     {
@@ -60,7 +63,7 @@ class Product extends Model
 
     public function brand(): BelongsTo
     {
-        return $this->belongsTo(Brand::class, 'brand_id', 'id')->withDefault();
+        return $this->belongsTo(Vendor::class, 'vendor_id', 'id');
     }
 
     public function product_images(): HasMany
@@ -82,10 +85,14 @@ class Product extends Model
     {
         return $this->hasMany(ProductVariant::class, 'product_id', 'id');
     }
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class, 'product_id', 'id');
+    }
 
     public function vendor(): BelongsTo
     {
-        return $this->belongsTo(Vendor::class)->withDefault();
+        return $this->belongsTo(Vendor::class);
     }
 
     public function toSearchableArray()
@@ -111,7 +118,7 @@ class Product extends Model
             'slug'               => $this->slug,
             'sku'                => $this->sku,
             'description'        => $this->description,
-            'vendor'             => $this->vendor->name,
+            'vendor'             => $this->vendor?->name,
             'short_description'  => $this->short_description,
             'price'              => $this->price,
             'sale_price'         => $this->sale_price,

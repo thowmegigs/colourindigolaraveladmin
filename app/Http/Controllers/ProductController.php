@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Category;
 use Batch;
 use File;
+use DB;
 use \Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -26,7 +28,14 @@ class ProductController extends Controller
         $this->has_popup = 0;
         $this->has_detail_view = 0;
         $this->has_side_column_input_group = 0;
-        $this->dimensions = getThumbnailDimensions();
+       /***also set in commonVars the thumbnailsDimesions  */
+        $this->dimensions = [
+                'tiny'  => 100,
+                'small' => 300,
+                 'medium' => 600,
+                // 'large' => 1080,
+                
+                ];
         $this->form_image_field_name = [
             [
                 'field_name' => 'image',
@@ -181,38 +190,16 @@ class ProductController extends Controller
     }
     public function commonVars($model = null)
     {
-
+       $is_vendor=auth()->guard('vendor')->check();
+       $cats=Category::whereDoesntHave('children')->get();
+      $leafCategories = [];
+        foreach ($cats as $list) {
+            $ar = (object) ['id' => $list->id, 'name' => $list->name];
+            array_push($leafCategories, $ar);
+        }
         $repeating_group_inputs = [
 
-            [
-                'colname' => 'addon_items',
-                'label' => 'Addon Items',
-                'inputs' => [
-
-                    [
-                        'placeholder' => 'Enter addon item name',
-                        'name' => 'addon_items__json__name[]',
-                        'label' => 'Name',
-                        'tag' => 'input',
-                        'type' => 'text',
-                        'default' => '',
-                        'attr' => [],
-                    ],
-                    [
-                        'placeholder' => 'Enter price',
-                        'name' => 'addon_items__json__price[]',
-                        'label' => 'Price',
-                        'tag' => 'input',
-                        'type' => 'number',
-                        'default' => '',
-                        'attr' => [],
-                    ],
-                ],
-                'index_with_modal' => 0,
-                'modalInputBoxIdWhoseValueToSetInSelect' => '',
-                'hide' => false,
-                'disable_buttons' => false,
-            ],
+          
         ];
         $toggable_group = [];
 
@@ -220,6 +207,22 @@ class ProductController extends Controller
             [
                 'column' => 'name',
                 'label' => 'Name',
+                'sortable' => 'Yes',
+                'show_json_button_click' => false,
+                'by_json_key' => 'id',
+                'inline_images' => true,
+            ],
+            [
+                'column' => 'uuid',
+                'label' => 'ID ',
+                'sortable' => 'Yes',
+                'show_json_button_click' => false,
+                'by_json_key' => 'id',
+                'inline_images' => true,
+            ],
+            [
+                'column' => 'vendor_id',
+                'label' => 'Brand',
                 'sortable' => 'Yes',
                 'show_json_button_click' => false,
                 'by_json_key' => 'id',
@@ -257,14 +260,7 @@ class ProductController extends Controller
                 'by_json_key' => 'id',
                 'inline_images' => true,
             ],
-            [
-                'column' => 'quantity',
-                'label' => 'Quantity',
-                'sortable' => 'Yes',
-                'show_json_button_click' => false,
-                'by_json_key' => 'id',
-                'inline_images' => true,
-            ],
+           
             [
                 'column' => 'image',
                 'label' => 'Image',
@@ -289,6 +285,7 @@ class ProductController extends Controller
                 'by_json_key' => 'id',
                 'inline_images' => true,
             ],
+           
         ];
         $view_columns = [
 
@@ -441,8 +438,12 @@ class ProductController extends Controller
                 'label' => 'Name',
             ],
             [
-                'name' => 'meta_title',
-                'label' => 'Meta Title',
+                'name' => 'sku',
+                'label' => 'SKU',
+            ],
+            [
+                'name' => 'uuid',
+                'label' => 'Id',
             ],
         ];
         $filterable_fields = [
@@ -450,51 +451,36 @@ class ProductController extends Controller
                 'name' => 'category_id',
                 'label' => 'Category ',
                 'type' => 'select',
-                'options' => getList('Category'),
+                'options' => $leafCategories,
             ],
-            [
-                'name' => 'price',
-                'label' => 'Price',
-                'type' => 'number',
-            ],
+           
             [
                 'name' => 'sale_price',
                 'label' => 'Sale Price',
                 'type' => 'number',
             ],
-            [
-                'name' => 'discount',
-                'label' => 'Discount',
-                'type' => 'number',
-            ],
-            [
-                'name' => 'discount_type',
-                'label' => 'Discount Type',
-                'type' => 'select',
-                'options' => getListFromIndexArray(['Flat','Percent']),
-            ],
+            
+          
             [
                 'name' => 'status',
                 'label' => 'Status',
                 'type' => 'select',
-                'options' => getListFromIndexArray(['Active','In-Active']),
+                'options' => getListFromIndexArray(['Active','In-Active','Under Review']),
             ],
           
+          
+        ];
+        if(current_role()!='Vendor'){
+            array_push($filterable_fields,
             [
                 'name' => 'vendor_id',
                 'label' => 'Vendor ',
                 'type' => 'select',
-                'options' => getList('Vendor'),
-            ],
-          
-            [
-                'name' => 'quantity',
-                'label' => 'Stock Quantity',
-                'type' => 'number',
-            ],
-        ];
+                'options' => getList('Vendor',['status'=>'Active']),
+            ]);
+        }
 
-        $data['data'] = [
+        $data['data'] = [ 
 
             'dashboard_url' => $this->dashboard_url,
             'index_url' => $this->index_url,
@@ -520,6 +506,7 @@ class ProductController extends Controller
             'has_detail_view' => $this->has_detail_view,
             'repeating_group_inputs' => $repeating_group_inputs,
             'toggable_group' => $toggable_group,
+            'thumbnailDimensions'=>$this->dimensions
         ];
 
         return $data;
@@ -574,7 +561,7 @@ class ProductController extends Controller
     }
     public function index(Request $request)
     {
-
+     $view_prefix=current_role()=='Vendor'?'vendor':'admin';
         $tabs = [
             /*[
         'label' => 'Active',
@@ -590,6 +577,7 @@ class ProductController extends Controller
         ],*/
         ];
         $vendor_id=auth()->id()?null:auth()->guard('vendor')->id();
+      
         $common_data = $this->commonVars()['data'];
         if ($request->ajax()) {
             $sort_by = $request->get('sortby');
@@ -624,15 +612,15 @@ class ProductController extends Controller
 
             }
 
-            $list = $db_query->latest()->paginate($this->pagination_count);
+            $list = $db_query->whereNUll('deleted_at')->latest()->paginate($this->pagination_count);
             $data = array_merge($common_data, [
 
                 'list' => $list,
                 'sort_by' => $sort_by,
                 'sort_type' => $sort_type,
                 'bulk_update' => json_encode([
-                    'status' => ['label' => 'Status', 'data' => getListFromIndexArray(['Active', 'In-Active'])],
-                    'visibility' => ['label' => 'Visibility', 'data' => getListFromIndexArray(['Public', 'Hidden'])],
+                    'status' => ['label' => 'Status', 'data' => getListFromIndexArray(['Active', 'In-Active','Under Review'])],
+                    // 'visibility' => ['label' => 'Visibility', 'data' => getListFromIndexArray(['Public', 'Hidden'])],
                 ]),
 
                 /*
@@ -645,7 +633,7 @@ class ProductController extends Controller
              */
 
             ]);
-            return view('admin.' . $this->view_folder . '.page', with($data));
+            return view($view_prefix.'.' . $this->view_folder . '.page', with($data));
         } else {
             if (!can('list_products')) {
                 return redirect()->back()->withError('Dont have permission to list');
@@ -661,42 +649,67 @@ class ProductController extends Controller
                 });
             }
             $query = $this->buildFilter($request, $query);
-            $list = $query->latest()->paginate($this->pagination_count);
+            $list = $query->orderByRaw('IF(updated_at IS NULL, created_at, updated_at) DESC')->whereNUll('deleted_at')->paginate($this->pagination_count);
             $view_data = array_merge($common_data, [
 
                 'list' => $list,
                 'bulk_update' => json_encode([
-                    'status' => ['label' => 'Status', 'data' => getListFromIndexArray(['Active', 'In-Active'])],
-                    'visibility' => ['label' => 'Visibility', 'data' => getListFromIndexArray(['Public', 'Hidden'])],
+                    'status' => ['label' => 'Status', 'data' => getListFromIndexArray(['Active', 'In-Active','Under Review'])],
+                    // 'visibility' => ['label' => 'Visibility', 'data' => getListFromIndexArray(['Public', 'Hidden'])],
 
                 ]), 'tabs' => $tabs,
 
             ]);
             $index_view = count($tabs) > 0 ? 'index_tabs' : 'index';
 
-            return view('admin.' . $this->view_folder . '.' . $index_view, $view_data);
+            return view($view_prefix.'.' .$this->view_folder . '.' . $index_view, $view_data);
         }
 
     }
-    public function gt($ar, $i, $s, $selected_id = null)
-    {
-        $i++;
-        foreach ($ar as $k) {
-            $selected = $selected_id == $k['id'] ? 'selected' : '';
-            $s .= '<option ' . $selected . ' value="' . $k['id'] . '"> ' . str_repeat('- ', $i) . $k['name'] . '</option>';
 
-            $childs = \App\Models\Category::whereCategoryId($k['id'])->get()->toArray();
-            if (count($childs) > 0) {
-                $s = $this->gt($childs, $i, $s, $selected_id);
-            }
+public function gt($ar, $i, $s, $selected_id = null)
+{
+    $i++;
+    foreach ($ar as $k) {
+        // Get children for this category
+        $childs = \App\Models\Category::whereCategoryId($k['id'])->get()->toArray();
 
+        // Disable if it has children
+        $disabled = count($childs) > 0 ? 'disabled' : '';
+
+        // Selected option
+        $selected = $selected_id == $k['id'] ? 'selected' : '';
+
+        // Check if this is a root category
+        $isRoot = $k['category_id'] === null;
+
+        // Indentation for children only
+        $indent = $isRoot ? '' : str_repeat('&nbsp;&nbsp;', $i - 1);
+
+        // Arrow only for children
+        $arrow = $isRoot ? '' : '↳ ';
+
+        // Style: Bold for root categories only
+        $style = $isRoot ? 'style="font-weight:bold;"' : '';
+
+        // Build the option
+        $s .= '<option ' . $selected . ' ' . $disabled . ' value="' . $k['id'] . '" ' . $style . '>'
+            . $indent . $arrow . $k['name']
+            . '</option>';
+
+        // Recurse into children
+        if (count($childs) > 0) {
+            $s = $this->gt($childs, $i, $s, $selected_id);
         }
-
-        return $s;
     }
+
+    return $s;
+}
+
+
     public function create(Request $r)
     {
-       
+         $view_prefix=current_role()=='Vendor'?'vendor':'admin';
        
         $cats = \App\Models\Category::whereNull('category_id')->get()->toArray();
         $s = '';
@@ -720,14 +733,14 @@ class ProductController extends Controller
                 return createResponse(false, 'Dont have permission to create');
             }
 
-            $html = view('admin.' . $this->view_folder . '.modal.add', with($view_data))->render();
+            $html = view($view_prefix.'.' . $this->view_folder . '.modal.add', with($view_data))->render();
             return createResponse(true, $html);
         } else {
 
             if (!can('create_products')) {
                 return redirect()->back()->withError('Dont have permission to create');
             }
-            return view('admin.' . $this->view_folder . '.add', with($view_data));
+            return view($view_prefix.'.'.$this->view_folder . '.add', with($view_data));
         }
 
     }
@@ -819,7 +832,8 @@ class ProductController extends Controller
             $post['searchable_attributes'] = !empty($searchable_attribte_json) ? json_encode($searchable_attribte_json) : null;
          // dd($searchable_attribte_json);
             $post = formatPostForJsonColumn($post);
-            $post['package_dimension']=json_encode(['weight'=>$post['package_weight'],'length'=>$post['package_length'],'width'=>$post['package_width'],'height'=>$post['package_height']]);
+            //$post['package_dimension']=json_encode(['weight'=>$post['package_weight'],'length'=>$post['package_length'],'width'=>$post['package_width'],'height'=>$post['package_height']]);
+            $post['package_dimension']=json_encode(['weight'=>0.4,'length'=>20,'width'=>18,'height'=>3]);
 
             if (!empty($post['price']) && !empty($post['sale_price']) && $post['price'] > 0 && $post['sale_price'] < $post['price']) {
                 $post['discount'] = round((($post['price'] - $post['sale_price']) / $post['price']) * 100, 2);
@@ -830,7 +844,7 @@ class ProductController extends Controller
             }
             $post['vendor_id']=auth()->id()?null:auth()->guard('vendor')->id();
            
-           
+            $post['status']='Under Review'; //by default product will be inactive when created by vendor or admin
           //  dd($post);
             $product = Product::create($post);
            
@@ -842,9 +856,9 @@ class ProductController extends Controller
                         'attribute_id'=>$k['id'],'attribute_name'=>$k['name'],'value'=>$k['value']];
                     }
                 }
-               
+               if(count($ar)>0){
                 \DB::table('product_facet_attribute_values')
-                ->insert($ar);
+                ->insert($ar);}
                 }
              if(!empty($searchable_attribte_json)){
                 $ar=[]; 
@@ -874,7 +888,7 @@ class ProductController extends Controller
            
             \DB::commit();
 
-            return createResponse(true, $this->crud_title . ' created successfully', $this->index_url);
+            return createResponse(true, 'Product submitted successfully! It is now under review and we’ll update you once approved.', $this->index_url);
         } catch (\Exception $ex) { \Sentry\captureException($ex);
             \DB::rollback();
                 \DB::table('system_errors')->insert([
@@ -897,6 +911,7 @@ class ProductController extends Controller
         $stored_main_files = [];
         $post = $r->all();
 //    dd($searchable_attributes);
+
         foreach ($post as $k => $v) {
             if (str_contains($k, 'variant_image')) {
                 $x = str_replace('variant_image__', '', $k);
@@ -914,7 +929,7 @@ class ProductController extends Controller
             foreach ($variant_main_image as $k => $v) {
                 $filerequest = $r->file('variant_image__' . $k);
                 $folder = $this->storage_folder . '/variants';
-                $filename = storeSingleFile($folder, $filerequest, true);
+                $filename = storeSingleFile($folder, $filerequest, true,$this->dimensions);
                 // generateThumbnail($filerequest, $folder,$this->dimensions);
                 $stored_main_file[$k] = $filename;
             }
@@ -955,18 +970,19 @@ class ProductController extends Controller
             foreach ($variant_gallery as $k => $v) {
                 $filerequest = $r->file('variant_product_images__' . $k);
                 $folder = $this->storage_folder . '\\variants';
-                storeMultipleFile($folder, $filerequest, 'ProductVariantImage', $generated_variant_id[$k], 'product_variant_id', true);
+                storeMultipleFile($folder, $filerequest, 'ProductVariantImage', $generated_variant_id[$k], 'product_variant_id', true,$this->dimensions);
             }
         }
 
     }
     public function edit(Request $request, $id)
     {
-       
+         $view_prefix=current_role()=='Vendor'?'vendor':'admin';
         $model = Product::with(['variants', 'images', 'variants.images'])->findOrFail($id);
         $relatedCategoryWithAttributes=findCategoryWithAttributes($model->category_id);
           $facet_atributes = \App\Models\FacetAttribute::with('attribute_values.attribute_value_template')
             ->where('category_id',$relatedCategoryWithAttributes)->get();
+        
         $product_existing_features=\DB::table('product_facet_attribute_values')
         ->where('product_id',$id)->get();
       
@@ -993,7 +1009,7 @@ class ProductController extends Controller
                 return createResponse(false, 'Dont have permission to edit');
             }
 
-            $html = view('admin.' . $this->view_folder . '.modal.edit', with($view_data))->render();
+            $html = view($view_prefix.'.' . $this->view_folder . '.modal.edit', with($view_data))->render();
             return createResponse(true, $html);
 
         } else {
@@ -1001,7 +1017,7 @@ class ProductController extends Controller
                 return redirect()->back()->withError('Dont have permission to edit');
             }
 
-            return view('admin.' . $this->view_folder . '.edit_with_variant_image', with($view_data));
+            return view($view_prefix.'.' . $this->view_folder . '.edit_with_variant_image', with($view_data));
 
         }
 
@@ -1010,6 +1026,7 @@ class ProductController extends Controller
     public function show(Request $request, $id)
     {
         $view = 'view';
+          $view_prefix=current_role()=='Vendor'?'vendor':'admin';
         $data = $this->common_view_data($id);
 // dd($data['row']->toArray());
         if ($request->ajax()) {
@@ -1025,7 +1042,7 @@ class ProductController extends Controller
                 return redirect()->back()->withError('Dont have permission to view');
             }
  //dd($data['row']->toArray());
-            return view('admin.' . $this->view_folder . '.view.' . $view, with($data));
+            return view($view_prefix.'.' . $this->view_folder . '.view.' . $view, with($data));
 
         }
 
@@ -1149,7 +1166,10 @@ class ProductController extends Controller
                 }
                 $post['collections'] = json_encode($collections);
             }
-            $post['package_dimension']=json_encode(['weight'=>$post['package_weight'],'length'=>$post['package_length'],'width'=>$post['package_width'],'height'=>$post['package_height']]);
+          
+            // $post['package_dimension']=json_encode(['weight'=>$post['package_weight'],'length'=>$post['package_length'],'width'=>$post['package_width'],'height'=>$post['package_height']]);
+             $post['package_dimension']=json_encode(['weight'=>0.4,'length'=>20,'width'=>18,'height'=>3]);
+
             if (!empty($post['price']) && !empty($post['sale_price']) && $post['price'] > 0 && $post['sale_price'] < $post['price']) {
                 $post['discount'] = round((($post['price'] - $post['sale_price']) / $post['price']) * 100, 2);
                 $post['discount_type'] = 'Percent';
@@ -1158,11 +1178,15 @@ class ProductController extends Controller
                 $post['discount_type'] = null;
             }
             $post['discount'] = (($post['price'] - $post['sale_price']) / $post['price']) * 100;
-          
+          // dd('ok');
+             $post['status']='Under Review';
             $product->update($post);
             $this->updateInFrontendSectionsWhenProdChange($product);
         //    dd($facet_attributes_values);
+       
              if(!empty($facet_attributes_values)){
+                $ar=[];
+                
              \DB::table('product_facet_attribute_values')->where('product_id',$product->id)->delete();
                 foreach($facet_attributes_values as $k){
                           if($k['value'] && $k['name']!='Size' && $k['name']!='Color'){
@@ -1172,8 +1196,10 @@ class ProductController extends Controller
                        
                     
                 }
-                \DB::table('product_facet_attribute_values')
-                ->insert($ar);
+                    if(count($ar)>0)
+                { \DB::table('product_facet_attribute_values')
+                    ->insert($ar);
+                }
             }
             if(!empty($searchable_attribte_json)){
                  \DB::table('product_facet_attribute_values')
@@ -1202,7 +1228,7 @@ class ProductController extends Controller
                                     'error'=>$ex->getMessage(),
                                     'which_function'=>'ProductController u[date function at line '.$ex->getLine()
                ]);
-            return createResponse(false, $ex->getMessage() . '==' . $ex->getLine());
+            return createResponse(false, $ex->getMessage() . '==' . $ex->getLine().'==='.$ex->getFile());
         }
     }
     public function saveVariantWithFilesUpdate(Request $r, $variants, $product,$searchable_attributes)
@@ -1219,6 +1245,7 @@ class ProductController extends Controller
         $cur_variants_name = array_keys($variants);
         $unmatched_ids = [];
         $is_changed_attribute = false;
+       
         if (count($old_variants_name) > 0) {
             if (count($old_variants_name) == count($cur_variants_name)) {
                 /**If count is same before and after edit then it means either all variants keys are completely same
@@ -1350,7 +1377,7 @@ class ProductController extends Controller
                             if (\File::exists(public_path($file_path))) {
                                 \File::delete(public_path($file_path));
                             }
-                        }
+                        }  
                     }
                 } catch (\Exception $ex) { \Sentry\captureException($ex);
                     dd($ex->getMessage() . '===' . $ex->getLine());
@@ -1388,7 +1415,7 @@ class ProductController extends Controller
             foreach ($variant_main_image as $k => $v) {
                 $filerequest = $r->file('variant_image__' . $k);
                 $folder = $this->storage_folder . '/variants';
-                $filename = storeSingleFile($folder, $filerequest, true);
+                $filename = storeSingleFile($folder, $filerequest, true,$this->dimensions);
                 // generateThumbnail($filerequest, $folder,$this->dimensions);
                 $stored_main_file[$k] = $filename;
             }
@@ -1465,11 +1492,11 @@ class ProductController extends Controller
                 if (isset($generated_variant_id[$k])) {
                     $filerequest = $r->file('variant_product_images__' . $k);
                     $folder = $this->storage_folder . '\\variants';
-                    storeMultipleFile($folder, $filerequest, 'ProductVariantImage', $generated_variant_id[$k], 'product_variant_id', true);
+                    storeMultipleFile($folder, $filerequest, 'ProductVariantImage', $generated_variant_id[$k], 'product_variant_id', true,$this->dimensions);
                 } elseif (!empty($old_variants_name) && in_array($k, $old_variants_name)) {
                     $filerequest = $r->file('variant_product_images__' . $k);
                     $folder = $this->storage_folder . '\\variants';
-                    storeMultipleFile($folder, $filerequest, 'ProductVariantImage', $variant_ids[$k], 'product_variant_id', true);
+                    storeMultipleFile($folder, $filerequest, 'ProductVariantImage', $variant_ids[$k], 'product_variant_id', true,$this->dimensions);
                 }
             }
         }
@@ -1484,72 +1511,108 @@ class ProductController extends Controller
         try
         {
 
-            $row = Product::with(['variants', 'variants.images'])->where('id', $id)->first();
+            $row = Product::with(['images','variants', 'variants.images'])->where('id', $id)->first();
             if ($row) {
-                //dd($row->toArray());
+             //   dd($row->toArray());
                 $product_id = $row->id;
                 $variants = $row->variants;
                 $var_ids = $variants ? array_column($variants->toArray(), 'id') : [];
 
                 $file_path = 'storage/products/' . $product_id;
 
-                try {
+               
                     if (\File::exists(public_path($file_path))) {
 
-                        \File::deleteDirectory(public_path($file_path));
+                       \File::deleteDirectory(public_path($file_path));
                     }
                     foreach ($variants as $t) {
 
-                        if ($t->images) {
-                            \App\Models\ProductVariantImage::whereIn('id', array_column($t->images->toArray(), 'id'))->delete();
-                        }
+                        \App\Models\ProductVariantImage::where('product_variant_id',$t->id)->delete();
+                        
 
                     }
-                } catch (\Exception $ex) { \Sentry\captureException($ex);
-                    dd($ex->getMessage());
-                }
+                
                 \App\Models\ProductVariant::whereProductId($id)->delete();
                 \App\Models\ProductImage::whereProductId($id)->delete();
-                \DB::table('contentsection_product')->whereProductId($id)->delete();
-                \DB::table('order_items')->whereProductId($id)->delete();
-                \DB::table('carts')->whereProductId($id)->delete();
+               
+                \DB::table('order_items')->where('product_id',$id)->delete();
+                \DB::table('product_facet_attribute_values')->where('product_id',$id)->delete();
+                \DB::table('carts')->where('product_id',$id)->delete();
+       
+                /** from collection table  */
+                    $result = \DB::select(
+                            "SELECT * FROM collections WHERE JSON_SEARCH(JSON_EXTRACT(product_id, '$[*].id'), 'one', ?) IS NOT NULL",
+                            [$id]
+                        );
+                           
+                     if (!empty($result)) {
+                            $colInstance = new \App\Models\Collection;
+                            $update_ar = [];
+                            foreach ($result as $t) {
+                            // echo "<pre>";print_r($t);die;
+                                $products = $t->product_id != null ? json_decode($t->product_id, true) : [];
+                                if (!empty($products)) {
+                                    $index = $this->getIndex($products, $id);
+                                    // dd($index);
+                                    if ($index > -1) {
+                                        unset($products[$index]);
 
-                //dd('SELECT * FROM collections WHERE json_contains(product_id->"$[*].id", json_array('.$id.'))');
-                //$result= \DB::select('SELECT * FROM collections WHERE json_contains(product_id->"$[*].id", json_array('.$id.'))');
-                if ($row->collections != null) {
-                    $colInstance = new \App\Models\Collection;
-                    $update_ar = [];
-                    $result = \DB::table('collections')->whereIn('id', json_decode($row->collections, true))->get();
-
-                    foreach ($result as $t) {
-                        //echo "<pre>";print_r($t);die;
-                        $products = $t->product_id != null ? json_decode($t->product_id, true) : [];
-                        if (!empty($products)) {
-                            $index = $this->getIndex($products, $id);
-                            // dd($index);
-                            if ($index > 0) {
-                                unset($products[$index]);
-                                $new_ar = array_merge([], $products);
-                                array_push($update_ar, ['id' => $t->id, 'product_id' => json_encode($new_ar)]);
+                                        $new_ar = array_merge([], $products);
+                                    //   dd($new_ar);
+                                        if(!empty($new_ar))
+                                        array_push($update_ar, ['id' => $t->id, 'product_id' => json_encode($new_ar)]);
+                                    }
+                                }
                             }
-                        }
-                    }
-                    // echo "<pre>";print_r($update_ar);die;
-                    Batch::update($colInstance, $update_ar, 'id');
+                            if(!empty($update_ar))
+                            Batch::update($colInstance, $update_ar, 'id');
+                          }
+                     /** from video table  */
+                    $results = \DB::table('videos')
+                        ->whereRaw('JSON_CONTAINS(product_ids, JSON_ARRAY(?))', [$id])
+                        ->get();
+                
+                      if (count($results)>0) {
+                    
+                          $colInstance = new \App\Models\Video;
+                          \DB::table('video_files')->where('product_id',$id)->delete();
+                            $update_ar = [];
+                            $ids_to_delete_from_video_files=[];
+                            foreach ($results as $t) {
+                            // echo "<pre>";print_r($t);die;
+                                $products = $t->json_column != null ? json_decode($t->json_column, true) : [];
+                                if (!empty($products)) {
+                                    $index = $this->getIndex2($products, $id);
+                                    // dd($index);
+                                    if ($index > -1) {
+                                        unset($products[$index]);
 
-                }
-                // echo "<pre>";print_r($result);die;
-                Product::destroy($id);
+                                        $new_ar = array_merge([], $products);
+                                    //   dd($new_ar);
+                                        if(!empty($new_ar))
+                                        array_push($update_ar, ['id' => $t->id, 'json_column' => json_encode($new_ar)]);
+                                    }
+                                }
+                            }
+                            if(!empty($update_ar))
+                            Batch::update($colInstance, $update_ar, 'id');
+                        }
+                
+            //  echo "<pre>";print_r($result);die;
+               
             }
+             
+          Product::destroy($id);
 
             if ($this->has_upload) {
                 $this->deleteFile($id);
             }
 
             return createResponse(true, $this->module . ' Deleted successfully');
-        } catch (\Exception $ex) { \Sentry\captureException($ex);
+        } catch (\Exception $ex) { 
+            \Sentry\captureException($ex);
 
-            return createResponse(false, 'Failed to  Delete Properly' . $ex->getMessage());
+            return createResponse(false, 'Failed to  Delete Properly' . $ex->getMessage().'==',$ex->getLine());
         }
 
     }
@@ -1560,6 +1623,22 @@ class ProductController extends Controller
         foreach ($details as $k => $v) {
 
             if ($v['id'] == $id) {
+                $index = $k;
+                break;
+
+            }
+
+        }
+
+        return $index;
+    }
+    public function getIndex2($details, $id)
+    {
+        $index = -1;
+
+        foreach ($details as $k => $v) {
+
+            if ($v['product_id'] == $id) {
                 $index = $k;
                 break;
 
@@ -1720,32 +1799,39 @@ class ProductController extends Controller
     }
 }
 protected function updateInFrontendSectionsWhenProdChange($product){
-   
-    $web_content_section_rows = \DB::table('content_sections')
-            ->whereNotNull('product_ids') // Ensure it's not NULL
-            ->where('product_ids', '!=', '[]') // Not an empty array
-            ->where('product_ids', '!=', '[null]') // Not exactly [null]
-            ->whereRaw('JSON_CONTAINS(product_ids, ?)', [json_encode($product->d)])
-            ->get();
-    $app_content_section_rows = \DB::table('website_content_sections')
-            ->whereNotNull('product_ids') // Ensure it's not NULL
-            ->where('product_ids', '!=', '[]') // Not an empty array
-            ->where('product_ids', '!=', '[null]') // Not exactly [null]
-            ->whereRaw('JSON_CONTAINS(product_ids, ?)', [json_encode($product->id)])
-            ->get();
+    
+    $app_content_section_rows = \DB::table('content_sections')
+            ->whereNotNull('product_ids')
+                    ->where('product_ids', '!=', '[]')
+                    ->whereRaw('JSON_CONTAINS(product_ids, ?)', [json_encode((string) $product->id)])
+                    ->get();
+       
+                $web_content_section_rows = \DB::table('website_content_sections')
+                    ->whereNotNull('product_ids')
+                    ->where('product_ids', '!=', '[]')
+                    ->whereRaw('JSON_CONTAINS(product_ids, ?)', [json_encode((string) $product->id)])
+                    ->get();
+      
     $collection_rows = \DB::table('collections')
             ->whereNotNull('product_id') // Ensure it's not NULL
             ->where('product_id', '!=', '[]') // Not an empty array
             ->where('product_id', '!=', '[null]') // Not exactly [null]
             ->whereRaw("JSON_SEARCH(product_id, 'one', ?, NULL, '$[*].id') IS NOT NULL", [$product->id])
             ->get();
+    $videos_rows = \DB::table('videos')
+            ->whereNotNull('product_ids')
+                    ->where('product_ids', '!=', '[]')
+                    ->whereRaw('JSON_CONTAINS(product_ids, ?)', [json_encode((string) $product->id)])
+                    ->get();
+      
             $productId=$product->id;
-    if($web_content_section_rows->count()>0){
-        foreach($web_content_section_rows as $row){
-            if($row->content_type!='Collection'){
+    if($app_content_section_rows->count()>0){
+        foreach($app_content_section_rows as $row){
+            if($row->content_type!='Collections'){
               $productInfo = json_decode($row->products1, true);
               foreach ($productInfo as &$product) {
                     if ($product['id'] == $productId) {
+                       
                         $product = array_merge($product,[
                              "id"=> $productId,
                              "name"=>  $product->name,
@@ -1767,9 +1853,10 @@ protected function updateInFrontendSectionsWhenProdChange($product){
             }
             else{
                   $productInfo = json_decode($row->collection_products_when_single_collection_set, true);
-              foreach ($productInfo as &$product) {
-                    if ($product['id'] == $productId) {
-                        $product = array_merge($product,[
+              foreach ($productInfo as &$product1) {
+                    if ($product1['id'] == $productId) {
+                      
+                        $product1 = array_merge($product1,[
                              "id"=> $productId,
                              "name"=>  $product->name,
                             "slug"=>  $product->slug,
@@ -1780,6 +1867,7 @@ protected function updateInFrontendSectionsWhenProdChange($product){
                             "sale_price"=>  $product->sale_price,
                             "discount_type"=>  $product->discount_type
                         ]);
+                       // dd($product1);
                         break;
                     }
                 }
@@ -1791,13 +1879,16 @@ protected function updateInFrontendSectionsWhenProdChange($product){
         }
     
     }
-    if($app_content_section_rows->count()>0){
-        foreach($app_content_section_rows as $row){
-         
+    if($web_content_section_rows->count()>0){
+       
+        foreach($web_content_section_rows as $row){
+          
               $productInfo = json_decode($row->products1, true);
-              foreach ($productInfo as &$product) {
-                    if ($product['id'] == $productId) {
-                        $product = array_merge($product,[
+             
+              foreach ($productInfo as &$product1) {
+                    if ($product1['id'] == $productId) {
+                      
+                        $product1 = array_merge($product1,[
                              "id"=> $productId,
                              "name"=>  $product->name,
                             "slug"=>  $product->slug,
@@ -1808,10 +1899,12 @@ protected function updateInFrontendSectionsWhenProdChange($product){
                             "sale_price"=>  $product->sale_price,
                             "discount_type"=>  $product->discount_type
                         ]);
+                       // dd($product1);
                         break;
                     }
                 }
-                  DB::table('content_sections')
+              
+                  DB::table('website_content_sections')
                     ->where('id', $row->id)
                     ->update(['products1' => json_encode($productInfo)]);
          
@@ -1825,9 +1918,10 @@ protected function updateInFrontendSectionsWhenProdChange($product){
         foreach($collection_rows as $row){
          
               $productInfo = json_decode($row->product_id, true);
-              foreach ($productInfo as &$product) {
-                    if ($product['id'] == $productId) {
-                        $product = array_merge($product,[
+              foreach ($productInfo as &$product1) {
+                    if ($product1['id'] == $productId) {
+                      
+                        $product1 = array_merge($product1,[
                              "id"=> $productId,
                              "name"=>  $product->name,
                             "slug"=>  $product->slug,
@@ -1838,12 +1932,39 @@ protected function updateInFrontendSectionsWhenProdChange($product){
                             "sale_price"=>  $product->sale_price,
                             "discount_type"=>  $product->discount_type
                         ]);
+                       // dd($product1);
                         break;
                     }
                 }
                   DB::table('collections')
                     ->where('id', $row->id)
                     ->update(['product_id' => json_encode($productInfo)]);
+         
+            
+          
+
+        }
+    
+    }
+  
+    if($videos_rows->count()>0){
+        foreach($videos_rows as $row){
+         
+              $productInfo = json_decode($row->json_column, true);
+              foreach ($productInfo as &$product1) {
+                    if ($product1['product_id'] == $productId) {
+                        $product1 = array_merge($product1,[
+                             "product_id"=> $productId,
+                             "name"=>  $product->name,
+                            "slug"=>  $product->slug,
+                           
+                        ]);
+                        break;
+                    }
+                }
+                  DB::table('videos')
+                    ->where('id', $row->id)
+                    ->update(['json_column' => json_encode($productInfo)]);
          
             
           

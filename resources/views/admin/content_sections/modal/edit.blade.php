@@ -69,7 +69,7 @@
            
                         
                                                 </div>
-                                <div class="col-md-12 mb-4">
+                                <div class="col-md-6 mb-4">
                                     <label class="form-label" for="product-title-input">Category <span
                                             class="text-danger">*</span></label>
     

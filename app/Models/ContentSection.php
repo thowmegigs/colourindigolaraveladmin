@@ -33,24 +33,5 @@ class ContentSection extends Model
 
     }
 
-    public function categories(): BelongsToMany
-    {
-
-        return $this->belongsToMany(Category::class, 'category_contentsection', 'contentsection_id', 'category_id');
-
-    }
-
-    public function products(): BelongsToMany
-    {
-
-        return $this->belongsToMany(Product::class, 'contentsection_product', 'contentsection_id', 'product_id');
-
-    }
-
-    public function collections(): BelongsToMany
-    {
-
-        return $this->belongsToMany(Collection::class, 'contentsection_collection', 'contentsection_id', 'collection_id');
-
-    }
+   
 }

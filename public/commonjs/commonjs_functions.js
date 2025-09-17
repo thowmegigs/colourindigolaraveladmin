@@ -236,17 +236,41 @@ function initialiseFormRepeater(){
    
 });
     $('#addMore').click(function () {
-        var newItem = $('.repeater-item:first').clone();
-        newItem.find('input').val('');
-        newItem.find('.image-wrapper').remove();
-        newItem.find('.remove-item').removeClass('d-none');
-         newItem.find('.select2').removeClass("select2-hidden-accessible").next(".select2-container").remove();
+  
+    // Clone the first repeater item
+    var newItem = $('.repeater-item:first').clone();
 
-            
-        $('#repeater-container').append(newItem);
-        initSelect2InRow(newItem);
-        initFilePreviewEvent()
+    // Clear input values
+    newItem.find('input').val('');
+ newItem.find('.image_preview_box').remove();
+    // Reset select values (but NOT remove options)
+    newItem.find('select.select2').each(function () {
+        // Remove previous select2 container if exists
+        $(this).next('.select2-container').remove();
+
+        // Reset selected value
+        $(this).val(null); // or '' depending on your default
+
+        // Remove Select2 initialization class (optional)
+        $(this).removeClass('select2-hidden-accessible');
     });
+
+    // Remove any image previews or other wrappers
+    newItem.find('.image-wrapper').remove();
+
+    // Ensure remove button is visible
+    newItem.find('.remove-item').removeClass('d-none');
+
+    // Append the new item
+    $('#repeater-container').append(newItem);
+
+    // Reinitialize select2 for the new item
+    initSelect2InRow(newItem);
+
+    // Rebind file preview
+    initFilePreviewEvent();
+});
+
 
     $(document).on('click', '.remove-item', function () {
         $(this).closest('.repeater-item').remove();
@@ -632,6 +656,38 @@ function deleteFileSelf(file_name, modelName, folder_name, field_name, row_id) {
         }
     });
 }
+function deleteFileFromPath(path) {
+    console.log('path',path)
+     let target=event.target
+     console.log('target',target)
+    let url = "/delete_file_from_path";
+    Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+        if (result.isConfirmed) {
+            let obj = {
+                path,
+              
+            };
+            let callback = function (res) {
+                // location.reload();
+               
+                console.log(target)
+                $(target).hide();
+              
+
+            };
+
+            objectAjaxWithBtnAndLoader((btnid = undefined), obj, url, callback);
+        }
+    });
+}
 /****Delete data from JSON colummn  */
 function deleteJsonColumnData(
     row_id_val,
@@ -847,7 +903,7 @@ function generateVariantSelectTagged(val_ar) {
 function generateVariant() {
 
     $els = $('.attribute_values');
-    
+   
     ar = {};
     if ($els.length > 0) {
         $els.each(function () {
@@ -874,6 +930,7 @@ function generateVariant() {
     if (combinations.length > 0) {
         
         if($('#model_id').length==0){
+          
                     for (i = 0; i < combinations.length; i++) {
                         let n = combinations[i];
                         g += returnAccordianWithImageUpload(n, i);
@@ -883,7 +940,7 @@ function generateVariant() {
                     initFilePreviewEvent('variant_container');
          }
          else{
-            
+             
             let callbackSuccess = function (res) {
                 $('#accord').html(res["message"]);
                 initFilePreviewEvent('variant_container');
@@ -896,6 +953,8 @@ function generateVariant() {
 
 }
 function returnAccordian(name, i) {
+    sku=$('#inp-sku').val()
+    max_qty=$('#max_qty').val()
     let s =`<div class="accordion-item shadow mb-2">
       <h2 class="accordion-header">
           <button class="accordion-button" type="button" data-bs-toggle="collapse"
@@ -925,11 +984,25 @@ function returnAccordian(name, i) {
                   </div>
                   <div class="col-md-3">
                       <div class="form-group">
+                          <label class="form-label" for="product-title-input">
+                              Sku</label>
+
+                          <input type="number" class="form-control" name="variant_sku__${name}"
+                              placeholder="Sku" value='${sku}'>
+
+
+
+                      </div>
+
+
+                  </div>
+                  <div class="col-md-3">
+                      <div class="form-group">
                           <label class="form-label" for="product-title-input">Sale
                               Price</label>
 
                           <input type="number" class="form-control" name="variant_sale_price__${name}"
-                              id="product-price-input" placeholder="Sale Price"
+                               placeholder="Sale Price"
                              
                               >
 
@@ -944,28 +1017,18 @@ function returnAccordian(name, i) {
                       <label class="form-label" for="product-title-input">Quantity</label>
 
                       <input type="number" class="form-control" name="variant_quantity__${name}"
-                          id="product-price-input" placeholder="Quantity"
-                         
-                          >
+                           placeholder="Quantity">
 
 
 
                   </div>
-
-
-              </div>
-              <div class="col-md-2">
-              <div class="form-group">
-                  <label class="form-label" for="product-title-input">Max Quantity Allowed</label>
-
-                  <input type="number" class="form-control" name="variant_max_quantity_allowed__${name}"
-                      id="product-price-input" placeholder="Max Quantity Allowed"
+                  <input type="hidden" class="form-control" name="variant_max_quantity_allowed__${name}"
+                      value='${max_qty}' placeholder="Max Quantity Allowed"
                      
                       >
 
-
-
               </div>
+            
 
 
           </div>
@@ -981,6 +1044,9 @@ function returnAccordian(name, i) {
 }
 function returnAccordianWithImageUpload(name, i) {
    // let name1= name.replace(/^[-]+/, '');
+  
+     sku=$('#inp-sku').val()
+    max_qty=$('#max_qty').val()
     let s =`<div class="accordion-item shadow mb-2">
       <h2 class="accordion-header">
           <button class="accordion-button" type="button" data-bs-toggle="collapse"
@@ -994,13 +1060,28 @@ function returnAccordianWithImageUpload(name, i) {
           <div class="accordion-body">
               <div class="row">
                  
+                  
+                  <div class="col-md-3">
+                      <div class="form-group">
+                          <label class="form-label" for="product-title-input">
+                              Sku</label>
+
+                          <input type="text" class="form-control" name="variant_sku__${name}"
+                              placeholder="Sku" value='${sku}' required>
+
+
+
+                      </div>
+
+
+                  </div>
                   <div class="col-md-2">
                       <div class="form-group">
                           <label class="form-label" for="product-title-input">
                               Price</label>
 
                           <input type="number" class="form-control" name="variant_price__${name}"
-                              placeholder="Price" >
+                              placeholder="Price" required>
 
 
 
@@ -1014,7 +1095,7 @@ function returnAccordianWithImageUpload(name, i) {
                               Price</label>
 
                           <input type="number" class="form-control" name="variant_sale_price__${name}"
-                              id="product-price-input" placeholder="Sale Price"
+                              id="product-price-input" placeholder="Sale Price" required
                              
                               >
 
@@ -1030,7 +1111,7 @@ function returnAccordianWithImageUpload(name, i) {
                               </label>
 
                           <input type="number" class="form-control" name="variant_quantity__${name}"
-                              id="product-qty-input" placeholder="Stock Quantiy"
+                              id="product-qty-input" placeholder="Stock Quantiy" required
                              
                               >
 
@@ -1041,7 +1122,7 @@ function returnAccordianWithImageUpload(name, i) {
 
                   </div>
 
-                  <div class="col-md-2">
+                  <div class="col-md-3">
                       <div class="form-group">
                           <label class="form-label" for="product-title-input">Main Image
                           </label>
@@ -1055,7 +1136,7 @@ function returnAccordianWithImageUpload(name, i) {
 
 
                   </div>
-                  <div class="col-md-3">
+                  <div class="col-md-3 mt-1">
                       <div class="form-group">
                           <label class="form-label" for="product-title-input">Gallery
                           </label>

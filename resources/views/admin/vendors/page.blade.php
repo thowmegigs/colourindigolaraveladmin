@@ -21,6 +21,22 @@
                     <td>
                         <x-status :status='$r->{$t}' />
                     </td>
+                 @elseif ($t=='bank_name')
+                    <td>
+                        {{$r->vendor_bank?->bank_name}}
+                    </td>
+                @elseif ($t=='account_number')
+                    <td>
+                        {{$r->vendor_bank?->account_number}}
+                    </td>
+                @elseif ($t=='account_holder')
+                    <td>
+                        {{$r->vendor_bank?->account_holder}}
+                    </td>
+                @elseif ($t=='ifsc_code')
+                    <td>
+                        {{$r->vendor_bank?->ifsc_code}}
+                    </td>
                 @elseif(str_contains($t, '_at') || str_contains($t, 'date'))
                     <td>{{ formateDate($r->{$t}) }}</td>
                 @elseif(isFieldPresentInRelation($model_relations, $t) >= 0)

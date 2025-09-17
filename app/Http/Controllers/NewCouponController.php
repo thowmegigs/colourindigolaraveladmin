@@ -119,6 +119,24 @@ class NewCouponController extends Controller
                 'type' => 'date',
                 'default' => isset($model) ? $model->end_date : "",
                 'attr' => [],'col'=>6
+            ],
+            [
+                'placeholder' => 'Enter max usage',
+                'name' => 'max_usage',
+                'label' => 'Max Usage Count',
+                'tag' => 'input',
+                'type' => 'number',
+                'default' => isset($model) ? $model->max_usage : "",
+                'attr' => [],'col'=>6
+            ],
+            [
+                'placeholder' => 'Enter max discount',
+                'name' => 'max_discount',
+                'label' => 'Max Discount Amount',
+                'tag' => 'input',
+                'type' => 'number',
+                'default' => isset($model) ? $model->max_discount : "",
+                'attr' => [],'col'=>6
             ]
         ]
     ]
@@ -238,6 +256,24 @@ class NewCouponController extends Controller
                         'multiple' => false,
                         'inline' => true,'col'=>6
                     ],
+                     [
+                'placeholder' => 'Enter max usage',
+                'name' => 'max_usage',
+                'label' => 'Max Usage Count',
+                'tag' => 'input',
+                'type' => 'number',
+                'default' => isset($model) ? $model->max_usage : "",
+                'attr' => [],'col'=>6
+                     ],
+                      [
+                'placeholder' => 'Enter max discount',
+                'name' => 'max_discount',
+                'label' => 'Max Discount Amount',
+                'tag' => 'input',
+                'type' => 'number',
+                'default' => isset($model) ? $model->max_discount : "",
+                'attr' => [],'col'=>6
+            ]
         ]
     ]
 ];
@@ -300,6 +336,22 @@ class NewCouponController extends Controller
     [
         'column' => 'end_date',
         'label' => 'EndDate',
+        'sortable' => 'Yes',
+        'show_json_button_click' => false,
+        'by_json_key' => 'id',
+        'inline_images' => true
+    ],
+    [
+        'column' => 'max_usage',
+        'label' => 'max Usage',
+        'sortable' => 'Yes',
+        'show_json_button_click' => false,
+        'by_json_key' => 'id',
+        'inline_images' => true
+    ],
+    [
+        'column' => 'max_discount',
+        'label' => 'max Discount ',
         'sortable' => 'Yes',
         'show_json_button_click' => false,
         'by_json_key' => 'id',

@@ -26,6 +26,12 @@ class {{modelName}}Controller extends Controller
          $this->has_popup={{has_popup}};
         $this->has_detail_view ={{has_detail_view}};
         $this->has_side_column_input_group =0;
+         $this->dimensions=  [
+                    'tiny'  => 360,
+                    'small' => 480,
+                    'medium' => 768,
+                    'large' => 1224,
+        ];
         $this->form_image_field_name ={{form_image_field_name}};
 
         $this->model_relations ={{model_relations}};
@@ -72,7 +78,7 @@ class {{modelName}}Controller extends Controller
                     'label' => $g['single'] ? properSingularName($g['field_name']) : properPluralName($g['field_name']),
                     'tag' => 'input',
                     'type' => 'file',
-                    'default' => $g['single'] ? $this->storage_folder . '/' . $model->{$g['field_name']} : json_encode($this->getImageList($model->id, $g['table_name'], $g['parent_table_field'],$this->storage_folder)),
+                    'default' => $model->{$g['field_name']}?($g['single'] ? $this->storage_folder . '/' . $model->{$g['field_name']} : json_encode($this->getImageList($model->id, $g['table_name'], $g['parent_table_field'], $this->storage_folder))):null,
                     'attr' => $g['single'] ? [] : ['multiple' => 'multiple'],
                 ];
                 array_push($data[0]['inputs'], $y);
@@ -118,6 +124,7 @@ class {{modelName}}Controller extends Controller
            'has_detail_view'=>$this->has_detail_view,
             'repeating_group_inputs' => $repeating_group_inputs,
             'toggable_group' => $toggable_group,
+            'thumbnailDimensions'=>$this->dimensions
         ];
        
 

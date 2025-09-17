@@ -9,12 +9,7 @@
     @endphp
     @foreach ($list as $r)
         <tr id="row-{{ $r->id }}">
-            <td>
-                {{ $i++ }}
-                <input name="ids[]" class="form-check-input" type="checkbox" value="{{ $r->id }}" />
-
-
-            </td>
+            
             @foreach ($table_columns1 as $t)
                 @php   ++$l;@endphp
                 @if (str_contains($t, 'status'))

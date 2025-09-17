@@ -43,8 +43,38 @@ class UserController extends Controller
             ],
            
             [
-                'column' => 'status',
+                'column' => 'is_verified',
                 'label' => 'Status',
+                'sortable' => 'Yes',
+            ],
+            [
+                'column' => 'bank_name',
+                'label' => 'Bank Name',
+                'sortable' => 'Yes',
+            ],
+            [
+                'column' => 'account_number',
+                'label' => 'A/C Number',
+                'sortable' => 'Yes',
+            ],
+            [
+                'column' => 'account_holder',
+                'label' => 'A/C Holder',
+                'sortable' => 'Yes',
+            ],
+            [
+                'column' => 'ifsc',
+                'label' => 'IFSC code',
+                'sortable' => 'Yes',
+            ],
+            [
+                'column' => 'upi_id',
+                'label' => 'UPI Id',
+                'sortable' => 'Yes',
+            ],
+            [
+                'column' => 'bank_name',
+                'label' => 'Bank Name',
                 'sortable' => 'Yes',
             ],
             [
@@ -59,16 +89,13 @@ class UserController extends Controller
         $this->repeating_group_inputs = [];
         $this->toggable_group = [];
         $this->model_relations = [
+           
             [
-                'name' => 'roles',
-                'class' => 'App\\Models\\User',
-                'type' => 'BelongsToMany',
+                'name' => 'customer_bank',
+                'class' => 'App\\Models\\CustomerBank',
+                'type' => 'BelongsTo',
             ],
-            [
-                'name' => 'permissions',
-                'class' => 'App\\Models\\User',
-                'type' => 'BelongsToMany',
-            ],
+           
             [
                 'name' => 'state',
                 'class' => 'App\\Models\\State',
@@ -82,7 +109,7 @@ class UserController extends Controller
         ];
 
     }
-    public function buildFilter(Request $r, $query)
+    public function buildFilter(Request $r, $query,$except=[])
     {
         $get = $r->all();
         if (count($get) > 0 && $r->isMethod('get')) {
@@ -132,7 +159,7 @@ class UserController extends Controller
     }
     public function index(Request $request)
     {
-$role='Customer';
+        $role='Customer';
         if (!can('list_user')) {
             return redirect(route('admin.unauthorized'));
         }
@@ -179,12 +206,12 @@ $role='Customer';
                 $search_by = 'name';
             }
 
-            $list = User::when(!empty($search_val), function ($query) use ($search_val, $search_by) {
+            $list = User::with(['state','city','customer_bank'])->when(!empty($search_val), function ($query) use ($search_val, $search_by) {
                 return $query->where($search_by, 'like', '%' . $search_val . '%');
             })
                 ->when(!empty($sort_by), function ($query) use ($sort_by, $sort_type) {
                     return $query->orderBy($sort_by, $sort_type);
-                })->whereRole($role)->paginate($this->pagination_count);
+                })->where('id','>',1)->paginate($this->pagination_count);
             $data = [
                 'table_columns' => $table_columns,
                 'list' => $list,
@@ -201,15 +228,10 @@ $role='Customer';
             ];
             return view('admin.' . $this->view_folder . '.page', with($data));
         } else {
-
-            $query = null;
-            if (count($this->model_relations) > 0) {
-                $query = User::whereRole($role)->with(['state','city']);
-            } else {
-                $query = User::whereRole($role);
-            }
+            $query = User::with(['state','city','customer_bank'])->where('id','>',1);
+          
             $query = $this->buildFilter($request, $query);
-            $list = $query->paginate($this->pagination_count);
+            $list = $query->latest()->paginate($this->pagination_count);
             $view_data = [
                 'list' => $list,
                 'dashboard_url' => $this->dashboard_url,
@@ -484,14 +506,16 @@ $role='Customer';
         }
     }
 
-    public function edit($id)
+    public function edit(Request $request,$id)
     {
 
         $model = User::findOrFail($id);
         $roles = $model->getRoleNames()->toArray();
- 
-        $list_roles =getListWithSameIdAndName('Role');
+        $is_vendor=$model->hasRole(['Vendor']);
        
+        $list_roles =getListWithSameIdAndName('Role');
+        $states=getList('State');
+        $cities=getList('City',['state_id'=>$model->state_id]);
         $data = [
             [
                 'label' => null,
@@ -503,62 +527,26 @@ $role='Customer';
                         'tag' => 'input',
                         'type' => 'text',
                         'default' => isset($model) ? $model->name : "",
-                        'attr' => [],
+                        'attr' => [],'col'=>6
                     ],
-                    // [
-                    //     'placeholder' => 'Enter email',
-                    //     'name' => 'email',
-                    //     'label' => 'Email',
-                    //     'tag' => 'input',
-                    //     'type' => 'email',
-                    //     'default' => isset($model) ? $model->email : "",
-                    //     'attr' => [],
-                    // ],
+                    [
+                        'placeholder' => 'Enter email',
+                        'name' => 'email',
+                        'label' => 'Email',
+                        'tag' => 'input',
+                        'type' => 'email',
+                        'default' => isset($model) ? $model->email : "",
+                        'attr' => [],'col'=>6
+                    ],
                     [
                         'placeholder' => 'Enter phone',
                         'name' => 'phone',
                         'label' => 'Phone Number',
                         'tag' => 'input',
-                        'type' => 'number',
+                        'type' => 'text',
                         'default' => isset($model) ? $model->phone : "",
-                        'attr' => [],
+                        'attr' => [],'col'=>6
                     ],
-                    // [
-                    //     'placeholder' => 'Enter password',
-                    //     'name' => 'password',
-                    //     'label' => 'Password <span style="font-size: 9px;">(Minimum 8 Characters ,combination of uppercase ,lowercase ,digits and special characters)</span>',
-                    //     'tag' => 'input',
-                    //     'type' => 'password',
-                    //     'default' => "",
-                    //     'attr' => [],
-                    // ],
-                    // [
-                    //     'name' => 'state_id',
-                    //     'label' => 'State',
-                    //     'tag' => 'select',
-                    //     'type' => 'select',
-                    //     'default' => isset($model) ? formatDefaultValueForEdit($model, 'state_id', false) : (!empty(getList('State')) ? getList('State')[0]->id : ''),
-
-                    //     'attr' => [],
-                    //     'custom_key_for_option' => 'name',
-                    //     'options' => getList('State'),
-                    //     'custom_id_for_option' => 'id',
-                    //     'multiple' => false,
-                    // ],
-                    // [
-
-                    //     'name' => 'city_id',
-                    //     'label' => 'City',
-                    //     'tag' => 'select',
-                    //     'type' => 'select',
-                    //     'default' => isset($model) ? $model->city_id : "",
-                    //     'attr' => [],
-                    //     'custom_key_for_option' => 'name',
-                    //     'options' => getList('City', ['state_id' => $model->state_id]),
-                    //     'custom_id_for_option' => 'id',
-                    //     'multiple' => false,
-                    // ],
-
                     [
                         'placeholder' => 'Enter address',
                         'name' => 'address',
@@ -566,8 +554,38 @@ $role='Customer';
                         'tag' => 'textarea',
                         'type' => 'textarea',
                         'default' => isset($model) ? $model->address : "",
-                        'attr' => [],
+                        'attr' => [],'col'=>6
                     ],
+                    
+                   
+                    [
+                        'name' => 'state_id',
+                        'label' => 'State',
+                        'tag' => 'select',
+                        'type' => 'select',
+                        'default' => isset($model) ? formatDefaultValueForEdit($model, 'state_id', false) : (!empty($states) ?$states[0]->id : ''),
+
+                        'attr' => [],
+                        'custom_key_for_option' => 'name',
+                        'options' =>$states,
+                        'custom_id_for_option' => 'id',
+                        'multiple' => false,'col'=>6
+                    ],
+                    [
+
+                        'name' => 'city_id',
+                        'label' => 'City',
+                        'tag' => 'select',
+                        'type' => 'select',
+                        'default' => isset($model) ? $model->city_id : "",
+                        'attr' => [],
+                        'custom_key_for_option' => 'name',
+                        'options' =>$cities,
+                        'custom_id_for_option' => 'id',
+                        'multiple' => false,'col'=>6
+                    ],
+
+                    
                     [
                         'placeholder' => 'Enter pincode',
                         'name' => 'pincode',
@@ -575,43 +593,12 @@ $role='Customer';
                         'tag' => 'input',
                         'type' => 'number',
                         'default' => isset($model) ? $model->pincode : "",
-                        'attr' => [],
+                        'attr' => [],'col'=>6
                     ],
-                    [
+                  
+                  
 
-                        'name' => 'role',
-                        'label' => 'Assign Role',
-                        'tag' => 'select',
-                        'type' => 'select',
-                        'default' => 'Driver',
-                        'attr' => [],
-                        'custom_key_for_option' => 'name',
-                        'options' => getListFromIndexArray(['Driver']),
-                        'custom_id_for_option' => 'id',
-                        'multiple' => false,
-                    ],
-
-                    [
-                        'name' => 'status',
-                        'label' => 'Status',
-                        'tag' => 'input',
-                        'type' => 'radio',
-                        'default' => isset($model) ? $model->status : 'Active',
-                        'attr' => [],
-                        'value' => [
-                            (object) [
-                                'label' => 'Active',
-                                'value' => 'Active',
-                            ],
-                            (object) [
-                                'label' => 'In-Active',
-                                'value' => 'In-Active',
-                            ],
-                        ],
-                        'has_toggle_div' => [],
-                        'multiple' => false,
-                        'inline' => true,
-                    ],
+                  
                 ],
             ],
         ];
@@ -651,10 +638,27 @@ $role='Customer';
         if ($this->has_upload && $this->is_multiple_upload) {
             $view_data['image_list'] = $this->getImageList($id);
         }
+          if ($request->ajax()) {
+            if (!can('edit_categories')) {
+                return createResponse(false, 'Dont have permission to edit');
+            }
 
-        return view('admin.' . $this->view_folder . '.edit', with($view_data));
+            $html = view('admin.' . $this->view_folder . '.modal.edit', with($view_data))->render();
+            return createResponse(true, $html);
+
+        } else {
+            if (!can('edit_categories')) {
+                return redirect()->back()->withError('Dont have permission to edit');
+            }
+
+            return view('admin.' . $this->view_folder . '.edit', with($view_data));
+
+        }
+
+       
 
     }
+    
     public function show($id)
     {
         if (!can('view_user')) {

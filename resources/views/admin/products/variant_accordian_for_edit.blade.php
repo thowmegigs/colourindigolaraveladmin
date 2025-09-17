@@ -12,14 +12,29 @@
                 <div class="accordion-body">
                     <div class="row">
 
+                        <div class="col-md-3">
+                          
+                            <div class="form-group">
+                                <label class="form-label" for="product-title-input">
+                                    Sku*</label>
+
+                                <input type="text" class="form-control" name="variant_sku__{{ $variant['name'] }}"
+                                    placeholder="Sku" value="{{ $variant['row']->sku }}" required>
+
+
+
+                            </div>
+
+
+                        </div>
                         <div class="col-md-2">
                             <input type="hidden" name="variant_id__{{$variant['name'] }}" value="{{ $variant['row']->id }}" />
                             <div class="form-group">
                                 <label class="form-label" for="product-title-input">
-                                    Price</label>
+                                    Price*</label>
 
                                 <input type="number" class="form-control" name="variant_price__{{ $variant['name'] }}"
-                                    placeholder="Price" value="{{ $variant['row']->price }}">
+                                    placeholder="Price" value="{{ $variant['row']->price }}" required>
 
 
 
@@ -30,10 +45,10 @@
                         <div class="col-md-2">
                             <div class="form-group">
                                 <label class="form-label" for="product-title-input">Sale
-                                    Price</label>
+                                    Price*</label>
 
                                 <input type="number" class="form-control" name="variant_sale_price__{{$variant['name'] }}"
-                                    id="product-price-input" placeholder="Sale Price" value="{{ $variant['row']->sale_price }}">
+                                    id="product-price-input" placeholder="Sale Price" value="{{ $variant['row']->sale_price }}" required>
 
 
 
@@ -43,11 +58,11 @@
                         </div>
                         <div class="col-md-2">
                             <div class="form-group">
-                                <label class="form-label" for="product-title-input">Stock Quantity
+                                <label class="form-label" for="product-title-input">Stock Quantity*
                                     </label>
 
                                 <input type="number" class="form-control" name="variant_quantity__{{$variant['name'] }}"
-                                    id="product-price-input4" placeholder="Sale Price" value="{{ $variant['row']->quantity }}">
+                                    id="product-price-input4" placeholder="Sale Price" value="{{ $variant['row']->quantity }}" required>
 
 
 
@@ -60,10 +75,10 @@
                         <div class="col-md-2">
                             <div class="form-group">
                                 <label class="form-label" for="product-title-input">Main
-                                    Image
+                                    Image*
                                 </label>
 
-                                <input type="file" class="form-control" name="variant_image__{{ $variant['name'] }}" />
+                                <input type="file" class="form-control" name="variant_image__{{ $variant['name'] }}" required/>
 
 
 
@@ -130,6 +145,21 @@
                 data-bs-parent="#default-accordion-example">
                 <div class="accordion-body">
                     <div class="row">
+                          <div class="col-md-3">
+                          
+                            <div class="form-group">
+                                <label class="form-label" for="product-title-input">
+                                    Sku*</label>
+
+                                <input type="text" class="form-control" name="variant_sku__{{ $variant['name'] }}"
+                                    placeholder="Sku" value="" required>
+
+
+
+                            </div>
+
+
+                        </div>
 
                         <div class="col-md-2">
                             <div class="form-group">

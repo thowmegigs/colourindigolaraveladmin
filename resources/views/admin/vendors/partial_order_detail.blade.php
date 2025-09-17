@@ -1,5 +1,5 @@
-<div class="table-responsive">
-    <table class="table table-bordered align-middle">
+<div class="table-responsive m-0">
+    <table class="table table-bordered align-middle m-0">
         <thead class="table-light">
             <tr>
                 <th>Item</th>

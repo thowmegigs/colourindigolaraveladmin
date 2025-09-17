@@ -22,7 +22,7 @@ class AppliedCoupon extends Model
     }
     public function coupon():BelongsTo
     {
-      return $this->belongsTo(Coupon::class,'coupon_id','id')->withDefault();
+      return $this->belongsTo(Coupon::class,'coupon_id','id');
     } 
    
   

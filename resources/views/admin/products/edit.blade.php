@@ -1,11 +1,11 @@
 @extends('layouts.admin.app')
 @section('content')
 @php 
-$colors=\DB::table('color_mappings')->get();
-$str='';
-foreach($colors as $cl){
-$str.=$cl->name.',';
-}
+$colors=\DB::table('colors')->get();
+ $str='';
+    foreach($colors as $cl){
+    $str.=$cl->name.'=='.$cl->hexcode.',';
+    }
 $str=rtrim($str,',');
 function selected_colors($colors,$values){
 $str='';

@@ -1,14 +1,6 @@
 @extends('layouts.admin.app')
 @section('content')
-@php
-    $colors=\DB::table('colors')->get();
-    $str='';
-    foreach($colors as $cl){
-    $str.=$cl->name.'=='.$cl->hexcode.',';
-    }
-    $str=rtrim($str,',');
-@endphp
-    <style>
+ <style>
         .bootstrap-tagsinput {
             width: 100% !important;
         }
@@ -36,15 +28,15 @@
             height: 80px;
             margin-top: 10px;
         }
-    </style>
-    @php 
-        $colors=\DB::table('color_mappings')->get();
-        $str='';$str1='';
-        foreach($colors as $cl){
-        $str.=$cl->name.',';
-        $str1.="<option value='".$cl->name."'>".$cl->name."</option>";
-        }
-        $str=rtrim($str,',');
+</style>
+@php 
+    $colors=\DB::table('colors')->get();
+    $str='';$str1='';
+    foreach($colors as $cl){
+        $str.=$cl->name.'=='.$cl->hexcode.',';
+    $str1.="<option value='".$cl->name."'>".$cl->name."</option>";
+    }
+    $str=rtrim($str,',');
 @endphp
     <div class="container-fluid">
 
@@ -131,7 +123,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="card">
+                <!-- <div class="card">
                     <div class="card-header">
                         <div class="card-title">Package Dimensions</div>
                     </div>
@@ -172,7 +164,7 @@
 
                         </div>
                     </div>
-                </div>
+                </div> -->
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">Inventory</div>
@@ -224,7 +216,7 @@
 
                         <div class="form-group">
                             <label class="form-group">Long Description</label>
-                            <textarea class="form-control summernote" name="description" rows="10">{!! $model->description !!}</textarea>
+                            <textarea class="form-control" name="description" rows="10">{!! $model->description !!}</textarea>
                         </div>
                     </div>
                 </div>

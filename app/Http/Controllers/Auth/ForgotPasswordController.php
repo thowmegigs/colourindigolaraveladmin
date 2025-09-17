@@ -30,7 +30,7 @@ class ForgotPasswordController extends Controller
     public function ForgetPassword()
     {
         $data['title']='Forget Password';
-        return view('auth.forget_password',with($data));
+        return view('vendor.forget_password',with($data));
     }
 
     public function ForgetPasswordStore(Request $request)
@@ -55,7 +55,7 @@ class ForgotPasswordController extends Controller
     public function ResetPassword($token)
     {
         
-        return view('auth.reset-password', ['token' => $token,'title'=>'Reset Password']);
+        return view('vendor.reset-password', ['token' => $token,'title'=>'Reset Password']);
     }
 
     public function ResetPasswordStore(Request $request)

@@ -1,7 +1,32 @@
 @extends('layouts.admin.app')
 @section('content')
     <div class="container-fluid">
+<div id="crud_modal" class="modal fade" role="dialog">
+            <div class="modal-dialog modal-lg">
 
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+
+
+                        <button type="button" class="btn btn-icon btn-outline-primary">
+                            <span class="tf-icons bx bx-edit"></span>
+                        </button> &nbsp;&nbsp;<h5 class="modal-title text-primary" id="modal-title">Add
+                            {{ properSingularName($plural_lowercase) }}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div class="spinner-border text-muted"></div>
+                        
+                    </div>
+                    <div class="modal-footer">
+                          
+                    </div>
+                </div>
+
+            </div>
+        </div>
         <!-- Basic Bootstrap Table -->
         <div class="card">
             <div class="card-header">
@@ -36,7 +61,7 @@
                                         <th>{{ str_replace(' Id', '', $t['label']) }}</th>
                                     @endif
                                 @endforeach
-                                <th>Role</th>
+                              
                                 <th>Action</th>
                             </tr>
                         </thead>

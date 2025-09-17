@@ -19,7 +19,7 @@ class WebsiteContentSectionController extends Controller
         $this->is_multiple_upload = 0;
         $this->has_export = 0;
         $this->pagination_count = 100;
-        $this->crud_title = 'App Content Section';
+        $this->crud_title = 'Website Content Section';
         $this->show_crud_in_modal = 1;
         $this->has_popup = 1;
         $this->has_detail_view = 0;
@@ -33,26 +33,13 @@ class WebsiteContentSectionController extends Controller
 
         $this->model_relations = [
             [
-                'name' => 'banner',
+                'name' => 'website_banner',
                 'type' => 'BelongsTo',
                 'save_by_key' => '',
                 'column_to_show_in_view' => 'name',
             ],
-            [
-                'name' => 'categories',
-                'type' => 'BelongsToMany',
-                'column_to_show_in_view' => 'name',
-            ],
-            [
-                'name' => 'products',
-                'type' => 'BelongsToMany',
-                'column_to_show_in_view' => 'name',
-            ],
-            [
-                'name' => 'collections',
-                'type' => 'BelongsToMany',
-                'column_to_show_in_view' => 'name',
-            ],
+          
+           
           
         ];
 
@@ -68,13 +55,22 @@ class WebsiteContentSectionController extends Controller
     }
     public function createInputsData()
     {
+        $today=now();
+        $coupon_rows=\DB::table('new_coupons')->where('start_date', '<=', $today)
+        ->where('end_date', '>=', $today)->get(['id', 'code']);
+
+        $coupons = [];
+        foreach ($coupon_rows as $list) {
+            $ar = (object) ['id' => $list->id, 'name' => $list->code];
+            array_push($coupons, $ar);
+        }
         $data = [
             [
                 'label' => null,
                 'inputs' => [
                    
                     [
-                        'name' => 'products',
+                        'name' => 'product_ids',
                         'label' => 'Products',
                         'tag' => 'select',
                         'type' => 'select',
@@ -83,10 +79,10 @@ class WebsiteContentSectionController extends Controller
                         'custom_key_for_option' => 'name',
                         'options' => [],
                         'custom_id_for_option' => 'id',
-                        'multiple' => true,
+                        'multiple' => true,'col' => 6,
                     ],
                     [
-                        'name' => 'collections',
+                        'name' => 'collection_ids',
                         'label' => 'Collection',
                         'tag' => 'select',
                         'type' => 'select',
@@ -97,7 +93,18 @@ class WebsiteContentSectionController extends Controller
                         'custom_id_for_option' => 'id',
                         'multiple' => true, 'col' => '6',
                     ],
-                    
+                    [
+                        'name' => 'coupon_ids',
+                        'label' => 'Coupons',
+                        'tag' => 'select',
+                        'type' => 'select',
+                        'default' => '',
+                        'attr' => [],
+                        'custom_key_for_option' => 'name',
+                        'options' =>$coupons,
+                        'custom_id_for_option' => 'id',
+                        'multiple' => true, 'col' => '6',
+                    ],
                     [
                         'placeholder' => 'Enter no of items ',
                         'name' => 'no_of_items',
@@ -131,65 +138,140 @@ class WebsiteContentSectionController extends Controller
                     ],
                   
                     [
-                        'name' => 'banner_id',
+                        'name' => 'website_banner_id',
                         'label' => 'Select banner',
                         'tag' => 'select',
                         'type' => 'select',
                         'default' => '',
                         'attr' => ['class' => 'no-select2'],
                         'custom_key_for_option' => 'name',
-                        'options' => getList('Banner'),
+                        'options' => getList('WebsiteBanner'),
                         'custom_id_for_option' => 'id',
                         'multiple' => false, 'col' => 6,
                     ],
                     [
-                        'name' => 'slider_id',
+                        'name' => 'vidoe_id',
+                        'label' => 'Select Video Banner',
+                        'tag' => 'select',
+                        'type' => 'select',
+                        'default' => '',
+                        'attr' => ['class' => 'no-select2'],
+                        'custom_key_for_option' => 'name',
+                        'options' => getList('Video'),
+                        'custom_id_for_option' => 'id',
+                        'multiple' => false, 'col' => 6,
+                    ],
+                    [
+                        'name' => 'website_slider_id',
                         'label' => 'Select Slider',
                         'tag' => 'select',
                         'type' => 'select',
                         'default' => '',
                         'attr' => ['class' => 'no-select2'],
                         'custom_key_for_option' => 'name',
-                        'options' => getList('Slider'),
+                        'options' => getList('WebsiteSlider'),
                         'custom_id_for_option' => 'id',
                         'multiple' => false, 'col' => 6,
+                    ],
+                     [
+                        'name' => 'show_header',
+                        'label' => 'Show Section Header',
+                        'tag' => 'input',
+                        'type' => 'radio',
+                        'default' => isset($model) && isset($model->show_header) ? $model->show_header : 'No',
+                        'attr' => [],
+                        'value' => [
+                            (object) [
+                                'label' => 'Yes',
+                                'value' => 'Yes',
+                            ],
+                            (object) [
+                                'label' => 'No',
+                                'value' => 'No',
+                            ],
+                        ],
+                        'has_toggle_div' => [],
+                        'multiple' => false,
+                        'inline' => true, 'col' => 6,
                     ],
                 ],
             ],
         ];
        
+         if (count($this->form_image_field_name) > 0) {
+            foreach ($this->form_image_field_name as $g) {
+                $y = [
+                    'placeholder' => '',
+                    'name' => $g['single'] ? $g['field_name'] : $g['field_name'] . '[]',
+                    'label' => $g['single'] ? properSingularName($g['field_name']) : properPluralName($g['field_name']),
+                    'tag' => 'input',
+                    'type' => 'file',
+                    'default' =>'',
+                    'attr' => $g['single'] ? [] : ['multiple' => 'multiple'],
+                ];
+                array_push($data[0]['inputs'], $y);
+            }
+        }
         return $data;
     }
-    public function editInputsData($model)
+   
+     public function editInputsData($model)
     {
-        $products = $model->products;
-        $collections = $model->collections;
+        $today=now();
+        $coupon_rows=\DB::table('new_coupons')->where('start_date', '<=', $today)
+        ->where('end_date', '>=', $today)->get(['id', 'code']);
+
+        $coupons = [];
+        foreach ($coupon_rows as $list) {
+            $ar = (object) ['id' => $list->id, 'name' => $list->code];
+            array_push($coupons, $ar);
+        }
+        $product_ids= $model->product_ids;
+        $collection_ids = $model->collection_ids?json_decode($model->collection_ids,true):[];
+       
+        $coupons_ids = $model->coupon_ids;
+// dd(json_decode(json_decode($collection_ids,true),true));
         $data = [
             [
                 'label' => null,
                 'inputs' => [
                   
                     [
-                        'name' => 'products',
+                        'name' => 'product_ids',
                         'label' => 'Products',
                         'tag' => 'select',
                         'type' => 'select',
-                        'default' => !empty($products) ? array_column($products->toArray(), 'id') : [],
-                        'attr' => [],
+                        'default' => !empty($product_ids) ? json_decode($product_ids,true) : [],
+
+                         'attr' => [],
                         'custom_key_for_option' => 'name',
                         'options' => getList('Product'),
                         'custom_id_for_option' => 'id',
-                        'multiple' => true,
+                        'multiple' => true,'col' => 6,
                     ],
                     [
-                        'name' => 'collections',
+                        'name' => 'collection_ids',
                         'label' => 'Collection',
                         'tag' => 'select',
                         'type' => 'select',
-                        'default' => !empty($collections) ? array_column($collections->toArray(), 'id') : [],
+                        'default' => !empty($collection_ids) ? $collection_ids : [],
+                      
                         'attr' => [],
                         'custom_key_for_option' => 'name',
                         'options' => getList('Collection'),
+                        'custom_id_for_option' => 'id',
+                        'multiple' => true, 'col' => '6',
+                    ],
+                   
+                    [
+                        'name' => 'coupon_ids',
+                        'label' => 'Coupons',
+                        'tag' => 'select',
+                        'type' => 'select',
+                        'default' => !empty($coupons_ids) ? jdon_decode($coupons_ids,true) : [],
+                        'attr' => [],
+                        'custom_key_for_option' => 'name',
+                        'options' => getList('Coupon'),
                         'custom_id_for_option' => 'id',
                         'multiple' => true, 'col' => '6',
                     ],
@@ -227,28 +309,62 @@ class WebsiteContentSectionController extends Controller
                     ],
                  
                     [
-                        'name' => 'banner_id',
+                        'name' => 'website_banner_id',
                         'label' => 'Select banner',
                         'tag' => 'select',
                         'type' => 'select',
-                        'default' =>$model->banner_id,
+                        'default' =>$model->website_banner_id,
                         'attr' => ['class' => 'no-select2'],
                         'custom_key_for_option' => 'name',
-                        'options' => getList('Banner'),
+                        'options' => getList('WebsiteBanner'),
                         'custom_id_for_option' => 'id',
                         'multiple' => false, 'col' => 6,
                     ],
                     [
-                        'name' => 'slider_id',
+                        'name' => 'website_slider_id',
                         'label' => 'Select Slider',
                         'tag' => 'select',
                         'type' => 'select',
-                        'default' =>$model->slider_id,
+                        'default' =>$model->website_slider_id,
                         'attr' => ['class' => 'no-select2'],
                         'custom_key_for_option' => 'name',
-                        'options' => getList('Slider'),
+                        'options' => getList('WebsiteSlider'),
                         'custom_id_for_option' => 'id',
                         'multiple' => false, 'col' => 6,
+                    ],
+                     [
+                        'name' => 'vidoe_id',
+                        'label' => 'Select Video ',
+                        'tag' => 'select',
+                        'type' => 'select',
+                        'default' =>$model->vidoe_id,
+                        'attr' => ['class' => 'no-select2'],
+                        'custom_key_for_option' => 'name',
+                        'options' => getList('Video'),
+                        'custom_id_for_option' => 'id',
+                        'multiple' => false, 'col' => 6,
+                    ],
+                  
+                     [
+                        'name' => 'show_header',
+                        'label' => 'Show Section Header',
+                        'tag' => 'input',
+                        'type' => 'radio',
+                        'default' => isset($model) && isset($model->show_header) ? $model->show_header : 'No',
+                        'attr' => [],
+                        'value' => [
+                            (object) [
+                                'label' => 'Yes',
+                                'value' => 'Yes',
+                            ],
+                            (object) [
+                                'label' => 'No',
+                                'value' => 'No',
+                            ],
+                        ],
+                        'has_toggle_div' => [],
+                        'multiple' => false,
+                        'inline' => true, 'col' => 6,
                     ],
                 ],
             ],
@@ -261,7 +377,7 @@ class WebsiteContentSectionController extends Controller
                     'label' => $g['single'] ? properSingularName($g['field_name']) : properPluralName($g['field_name']),
                     'tag' => 'input',
                     'type' => 'file',
-                    'default' => $g['single'] ? $this->storage_folder . '/' . $model->{$g['field_name']} : json_encode($this->getImageList($model->id, $g['table_name'], $g['parent_table_field'], $this->storage_folder)),
+                    'default' => $model->{$g['field_name']}?($g['single'] ? $this->storage_folder . '/' . $model->{$g['field_name']} : json_encode($this->getImageList($model->id, $g['table_name'], $g['parent_table_field'], $this->storage_folder))):null,
                     'attr' => $g['single'] ? [] : ['multiple' => 'multiple'],
                 ];
                 array_push($data[0]['inputs'], $y);
@@ -540,6 +656,7 @@ class WebsiteContentSectionController extends Controller
 
     public function create(Request $r)
     {
+        
         $data = $this->createInputsData();
         $cats = \App\Models\Category::whereNull('category_id')->get()->toArray();
         $s = '';
@@ -576,16 +693,19 @@ class WebsiteContentSectionController extends Controller
 
         try {
             $post = $request->all();
-          
-            if (empty($post['categories'][0])) {
-                unset($post['categories']);
+            if (empty($post['category_ids'][0])) {
+                unset($post['category_ids']);
             }
-            if (empty($post['products'][0])) {
-                unset($post['products']);
+            if (empty($post['product_ids'][0])) {
+                unset($post['product_ids']);
             }
-            if (empty($post['collections'][0])) {
-                unset($post['collections']);
+            if (empty($post['collection_ids'][0])) {
+                unset($post['collection_ids']);
             }
+            if (empty($post['coupon_ids'][0])) {
+                unset($post['coupon_ids']);
+            }
+            
            
             $post = formatPostForJsonColumn($post);
             /* Saving name alongwith id in json column takki join se na retrive karna pade
@@ -594,43 +714,50 @@ class WebsiteContentSectionController extends Controller
              */
            $last_sequence=\DB::table('website_content_sections')->max('sequence');
            $post['sequence']=$last_sequence+1;
-       
-            $website_content_section = WebsiteContentSection::create($post);
-            $this->afterCreateProcess($request, $post, $website_content_section);
-            if (isset($post['categories'])) {
-               $catids=json_decode($post['categories'],true);
-               $cats=\DB::table('categories')->whereIn('id',$catids)->get();
-               $cat_infos=[];
-               foreach($cats as $c){
-                $cat_infos[]=[
-                    "id"=>$c->id,'name'=>$c->name,'image'=>$c->image,'slug'=>$c->slug
-                ];
-
-               }
-               if(count($cat_infos)>0){
-                $website_content_section->categories1=json_encode($cat_infos);
-                $website_content_section->save();
-               }
-            }
-            if (isset($post['products'])) {
-                $prodids=json_decode($post['products'],true);
-                $prods=\DB::table('products')->whereIn('id',$prodids)->get();
-                $prod_infos=[];
-                foreach($prods as $c){
-                 $prod_infos[]=[
-                     "id"=>$c->id,'name'=>$c->name,'image'=>$c->image,
-                     'price'=>$c->price,'sale_price'=>$c->sale_price,
-                     'quantity'=>$c->quantity,'slug'=>$c->slug
-                    
+            $content_section = WebsiteContentSection::create($post);
+            $this->afterCreateProcess($request, $post, $content_section);
+            if (isset($post['category_ids'])) {
+                $catids=json_decode($post['category_ids'],true);
+                $cats=\DB::table('categories')->whereIn('id',$catids)->get();
+                $cat_infos=[];
+                foreach($cats as $c){
+                 $cat_infos[]=[
+                     "id"=>$c->id,'name'=>$c->name,'slug'=>$c->slug,'image'=>$c->image
                  ];
  
                 }
-                if(count($prod_infos)>0){
-                $website_content_section->products1=json_encode($prod_infos);
-                $website_content_section->save();
+                if(count($cat_infos)>0){
+                 $content_section->categories1=json_encode($cat_infos);
+                 $content_section->category_ids=$post['category_ids'];
+
+                 $content_section->save();
                 }
-            }
-              if (isset($post['collection_ids'])) {
+             }
+             if (isset($post['product_ids'])) {
+                    $prodids=json_decode($post['product_ids'],true);
+                   $prods=\App\Models\Product::with('vendor:id,name')->whereIn('id',$prodids)->get();
+                    $prod_infos=[];
+                    foreach($prods as $c){
+                    $prod_infos[]=[
+                         "id"=>$c->id,'name'=>$c->name,'image'=>$c->image,
+                        'price'=>$c->price,'sale_price'=>$c->sale_price,
+                        'quantity'=>$c->quantity,
+                        'discount'=>$c->discount,'slug'=>$c->slug,
+                        'discount_type'=>$c->discount_type,
+                        'rating'=>$c->rating,
+                        'brand'=>$c->vendor->name
+                        
+                    ];
+    
+                    }
+                    
+                    if(count($prod_infos)>0){
+                    $content_section->products1=json_encode($prod_infos);
+                    $content_section->product_ids=$post['product_ids'];
+                    $content_section->save();
+                    }
+                }
+             if (isset($post['collection_ids'])) {
                  $prodids=json_decode($post['collection_ids'],true);
                  $prods=\DB::table('collections')->whereIn('id',$prodids)->get();
                  $prod_infos=[];
@@ -644,7 +771,7 @@ class WebsiteContentSectionController extends Controller
                  if(count($prod_infos)>0){
                  $content_section->collections1=json_encode($prod_infos);
                  $content_section->product_ids=json_encode($prod_ids);
-                 $content_section->collection_ids=json_encode($post['collection_ids']);
+                 $content_section->collection_ids=$post['collection_ids'];
                  if(count($prodids)==1){
                 
                     $content_section->collection_products_when_single_collection_set=$prods[0]->product_id;
@@ -655,12 +782,29 @@ class WebsiteContentSectionController extends Controller
                  $content_section->save();
                  }
              }
+             if (isset($post['coupon_ids'])) {
+                $prodids=json_decode($post['coupon_ids'],true);
+                $prods=\DB::table('new_coupons')->whereIn('id',$prodids)->get();
+                $prod_infos=[];
+                foreach($prods as $c){
+                 $prod_infos[]=(array)$c;
+ 
+                }
+                if(count($prod_infos)>0){
+                $content_section->coupons1=json_encode($prod_infos);
+                $content_section->coupon_ids=$post['coupon_ids'];
+                $content_section->save();
+                }
+            }
             \DB::commit();
             return createResponse(true, $this->crud_title . ' created successfully', $this->index_url);
         } catch (\Exception $ex) { \Sentry\captureException($ex);
             \DB::rollback();
-
-            return createResponse(false, $ex->getMessage().'=='.$ex->getLine());
+             \DB::table('system_errors')->insert([
+                  'error'=>$ex->getMessage(),
+                  'which_function'=>'WebsiteContentSectionController store function at line '.$ex->getLine()
+               ]);
+            return createResponse(false, $ex->getMessage());
         }
     }
     public function edit(Request $request, $id)
@@ -674,8 +818,8 @@ class WebsiteContentSectionController extends Controller
         $cats = \App\Models\Category::whereNull('category_id')->get()->toArray();
         $s = '';
         $i = 0;
-        $categories = !empty($model->categories) ? array_column(json_decode($model->categories, true), 'id') : null;
-        $category_options = gt_multiple($cats, $i, $s, $categories);
+        $categories = !empty($model->category_ids) ? json_decode($model->category_ids, true) : null;
+        $category_options =$categories?gt_multiple($cats, $i, $s, $categories):gt($cats, $i, $s);
         $view_data = array_merge($this->commonVars($model)['data'], [
             'data' => $data, 'model' => $model, 'category_options' => $category_options,
 
@@ -736,15 +880,30 @@ class WebsiteContentSectionController extends Controller
         {
             $post = $request->all();
 
-            $website_content_section = WebsiteContentSection::findOrFail($id);
+            $content_section = WebsiteContentSection::findOrFail($id);
 
             $post = formatPostForJsonColumn($post);
-          
+            /* Saving name alongwith id in json column takki join se na retrive karna pade
+            copy this code from contrller file and paste and edit here
+            $post=$this->processJsonColumnToAddNameOrAddtionalData($post);
+             */
+            // $old_image = $content_section->header_image;
+            // if ($request->hasFile('header_image')) {
+            //     if ($old_image) {
+            //         $file_path = 'storage/' . $this->storage_folder . '/' . $old_image;
+            //         if (\File::exists(public_path($file_path))) {
+            //             \File::delete(public_path($file_path));
+            //         }
+
+            //     }
+            // }
            
-            $website_content_section->update($post);
-            $this->afterCreateProcess($request, $post, $website_content_section);
+            $content_section->update($post);
+           // dd($post);
+            $this->afterCreateProcess($request, $post, $content_section);
             if (isset($post['categories'])) {
                 $catids=json_decode($post['categories'],true);
+              
                 $cats=\DB::table('categories')->whereIn('id',$catids)->get();
                 $cat_infos=[];
                 foreach($cats as $c){
@@ -754,49 +913,82 @@ class WebsiteContentSectionController extends Controller
  
                 }
                 if(count($cat_infos)>0){
-                 $website_content_section->categories1=json_encode($cat_infos);
-                 $website_content_section->save();
+                 $content_section->categories1=json_encode($cat_infos);
+                  $content_section->category_ids=$post['categories'];
+                 $content_section->save();
                 }
              }
-            if (isset($post['products'])) {
-                 $prodids=json_decode($post['products'],true);
-                 $prods=\DB::table('products')->whereIn('id',$prodids)->get();
-                 $prod_infos=[];
-                 foreach($prods as $c){
-                  $prod_infos[]=[
-                      "id"=>$c->id,'name'=>$c->name,'image'=>$c->image,
-                      'price'=>$c->price,'sale_price'=>$c->sale_price,
-                      'quantity'=>$c->quantity
-                     
-                  ];
-  
-                 }
+            if (isset($post['product_ids'])) {
+                  $prodids=json_decode($post['product_ids'],true);
+               
+                 $prods=\App\Models\Product::with('vendor:id,name')->whereIn('id',$prodids)->get();
+                    $prod_infos=[];
+                    foreach($prods as $c){
+                    $prod_infos[]=[
+                         "id"=>$c->id,'name'=>$c->name,'image'=>$c->image,
+                        'price'=>$c->price,'sale_price'=>$c->sale_price,
+                        'quantity'=>$c->quantity,
+                        'discount'=>$c->discount,'slug'=>$c->slug,
+                        'discount_type'=>$c->discount_type,
+                        'rating'=>$c->rating,
+                        'brand'=>$c->vendor->name
+                        
+                    ];
+                }
+              //  dd($prod_infos);
                  if(count($prod_infos)>0){
-                 $website_content_section->products1=json_encode($prod_infos);
-                 $website_content_section->save();
+                 $content_section->products1=json_encode($prod_infos);
+                 $content_section->product_ids=$post['product_ids'];
+                 $content_section->save();
                  }
              }
-             if (isset($post['collections'])) {
-                 $prodids=json_decode($post['collections'],true);
+             if (isset($post['collection_ids'])) {
+                 $prodids=json_decode($post['collection_ids'],true);
                  $prods=\DB::table('collections')->whereIn('id',$prodids)->get();
                  $prod_infos=[];
+                 $prod_ids=[];
                  foreach($prods as $c){
+                 $prod_ids[]=$c->id;
                   $prod_infos[]=[
-                      "id"=>$c->id,'name'=>$c->name,'image'=>$c->image,
-                     
-                     
-                  ];
-  
-                 }
+                      "id"=>$c->id,'name'=>$c->name,'image'=>$c->image,'slug'=>$c->slug
+                    ];
+                }
                  if(count($prod_infos)>0){
-                 $website_content_section->collections1=json_encode($prod_infos);
-                 $website_content_section->save();
+                 $content_section->collections1=json_encode($prod_infos);
+                 $content_section->product_ids=json_encode($prod_ids);
+                 $content_section->collection_ids=$post['collection_ids'];
+                 if(count($prodids)==1){
+                
+                    $content_section->collection_products_when_single_collection_set=$prods[0]->product_id;
+                    $content_section->product_ids=$prods[0]->product_id;
+                  
+
+                 }
+                 $content_section->save();
                  }
              }
+             if (isset($post['coupon_ids'])) {
+                $prodids=json_decode($post['coupon_ids'],true);
+                $prods=\DB::table('new_coupons')->whereIn('id',$prodids)->get();
+                $prod_infos=[];
+                foreach($prods as $c){
+                 $prod_infos[]=(array)$c;
+ 
+                }
+                if(count($prod_infos)>0){
+                $content_section->coupons1=json_encode($prod_infos);
+                $content_section->coupon_ids=$post['coupon_ids'];
+                $content_section->save();
+                }
+            }
             \DB::commit();
             return createResponse(true, $this->crud_title . ' updated successfully', $this->index_url);
         } catch (\Exception $ex) { \Sentry\captureException($ex);
             \DB::rollback();
+               \DB::table('system_errors')->insert([
+                                    'error'=>$ex->getMessage(),
+                                    'which_function'=>'WebsiteContentSectionController update function at line '.$ex->getLine()
+               ]);
             return createResponse(false, $ex->getMessage());
         }
     }
@@ -816,10 +1008,10 @@ class WebsiteContentSectionController extends Controller
             if ($this->has_upload) {
                 $this->deleteFile($id);
             }
-          
+           
             return createResponse(true, $this->module . ' Deleted successfully');
         } catch (\Exception $ex) { \Sentry\captureException($ex);
-           
+         
             return createResponse(false, 'Failed to  Delete Properly');
         }
 
@@ -881,25 +1073,5 @@ class WebsiteContentSectionController extends Controller
 
         return $this->getImageListBase($id, $table, $parent_field_name, $this->storage_folder);
     }
-    public function updateSequence(Request $request)
-{
-    // Validate the incoming order array
-    $request->validate([
-        'order' => 'required|array',
-        'table' => 'required',
-        'order.*.id' => 'required|integer',
-        'order.*.sequence' => 'required|integer'
-
-    ]);
-
-    // Update each product's sequence number
-    foreach ($request->order as $item) {
-        \DB::table($request->table)->where('id', $item['id'])->update([
-            'sequence' => $item['sequence'],  // Update sequence or any other field
-        ]);
-    }
-
-    // Return a success response
-    return response()->json(['message' => 'Sequence updated successfully']);
-}
+  
 }

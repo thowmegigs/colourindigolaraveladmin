@@ -98,7 +98,7 @@
                 </div>
                 <br>
                 <div class="d-flex justify-content-between flex-wrap mt-3">
-                    <x-groupButtonIndexPage :filterableFields="$filterable_fields" :pluralLowercase="$plural_lowercase" :bulkUpdate="$bulk_update" :moduleTableName="$module_table_name" />
+                    <x-groupButtonIndexPage :whichButtonsToHideArray="['trash']" :filterableFields="$filterable_fields" :pluralLowercase="$plural_lowercase" :bulkUpdate="$bulk_update" :moduleTableName="$module_table_name" />
 
                     <x-search :searchableFields="$searchable_fields" />
 

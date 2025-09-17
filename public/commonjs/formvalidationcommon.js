@@ -250,6 +250,7 @@ function formValidateFunctionTemplate(
         messages,
         focusCleanup: true,
         submitHandler: function (form, event) {
+            
             event.preventDefault();
             formid = $(form).attr("id");
 
@@ -264,6 +265,7 @@ function formValidateFunctionTemplate(
                     show_server_validation_in_alert
                 );
             } else {
+               
                 formAjaxSubmitWithImageWithServerValidationError(
                     "Submit",
                     btnid,
@@ -358,6 +360,7 @@ function formAjaxSubmitWithImageWithServerValidationError(
         },
         success: function (res, textStatus, xhr) {
             enableBtn(btn);
+            console.log('res',res)
             handleFormSubmitSuccess(
                 formid,
                 res,

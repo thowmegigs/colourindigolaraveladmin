@@ -11,8 +11,7 @@ class ProductTemplateExport implements FromArray, WithHeadings,WithColumnWidths
         return [
             'name', 'description', 'category','sku', 'price', 'sale_price', 'quantity',
             'has_variant',
-            'width','length','height','weight','meta_keywords',
-            'meta_description','sizes','size_skus' ];
+            'sizes'];
     }
 
     public function array(): array
@@ -20,9 +19,7 @@ class ProductTemplateExport implements FromArray, WithHeadings,WithColumnWidths
         return [
             [
                 'Cotton Trouser', 'High-quality cotton', 'Men Casual Trousers',  'TROUSER-001', '499','300', '5', 
-                'Yes',
-               '22','45','44','0.7',"Casula Cotton ","Some descrition for seo ",
-               "X,S,M","001,002-M,003"
+                'Yes',"X,S,M"
             ]
           
         ];

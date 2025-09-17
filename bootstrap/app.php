@@ -18,7 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
          
           $middleware->validateCsrfTokens(except: [
-          'return_upload','webhook','addUpdateCustomerPayment'
+          'return_upload','webhook','addUpdateCustomerPayment','delhivery-webhook','check_pincode'
       
          ]);
     })

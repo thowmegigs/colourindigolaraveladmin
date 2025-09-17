@@ -20,6 +20,7 @@
                                     fieldName="name"
                                     :rowid="$item->id"
                                     />
+                                    
                                 </div></div>
                                 <div class="col">
                                 <div class="mb-3">
@@ -32,7 +33,7 @@
                                         </select>
                                 </div>
                                 </div>
-                                <button type="button" class="btn btn-icon btn-danger btn-sm remove-item position-absolute top-0 end-0 m-2 d-none"><i class="mdi mdi-minus"></i></button>
+                                <button type="button" class="btn btn-icon btn-danger btn-sm remove-item position-absolute top-0 end-0 m-2"><i class="mdi mdi-minus"></i></button>
                             </div>
                     
                     @endforeach

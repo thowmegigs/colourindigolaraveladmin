@@ -144,7 +144,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card">
+            <!-- <div class="card">
                 <div class="card-header">
                     <div class="card-title">Package Dimensions</div>
                 </div>
@@ -183,7 +183,7 @@
 
                     </div>
                 </div>
-            </div>
+            </div> -->
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">Inventory</div>
@@ -303,7 +303,7 @@
 
                     <div class="form-group">
                         <label class="form-group">Long Description</label>
-                        <textarea class="form-control summernote" name="description" rows="10"></textarea>
+                        <textarea class="form-control" name="description" rows="10"></textarea>
                     </div>
                 </div>
             </div>

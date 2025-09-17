@@ -14,14 +14,9 @@ class SettingRequest extends FormRequest
     public function rules()
     {
         return [
-    'company_name' => 'required',
-    'delivery_charge' => 'numeric',
-    'delivery_instructions' => 'nullable',
-    'delivery_slots' => 'nullable',
-    'return_instructions' => 'nullable',
-    'logo' => 'image|nullable',
-    'website_url' => 'nullable',
-    'delivery_slots__json__name[]\'' => 'nullable'
-];
+                'commission' => 'required|numeric',
+                'return_days' => 'required|numeric',
+            
+            ];
     }
 }

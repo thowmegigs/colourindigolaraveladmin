@@ -7,10 +7,10 @@ if (str_contains($host, 'vendor')) {
 @endphp
 <div class="app-menu navbar-menu " style="border:0">
             <!-- LOGO --> 
-            <div class="navbar-brand-box " @if($is_vendor) style="background:#ffffff;height:69px" @endif>
+            <div class="navbar-brand-box p-0">
                 <!-- Dark Logo-->
-                <a href="/" class="logo " style="font-family:fantasy;font-size:30px">
-                 <img src="https://colourindigo.com/logo.png" style="width:100px;height:35px;margin:20px"/>
+                <a href="/" class="logo p-0" style="font-family:fantasy;font-size:30px">
+                 <img src="https://colourindigo.com/logo.png" style="width:100px;height:35px"/>
                      
                 </a>
                 <!-- Light Logo-->

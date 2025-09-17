@@ -14,7 +14,7 @@ if (str_contains($host, 'vendor')) {
 @else
 
 @endif -->
-<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable">
+<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="light" data-sidebar-size="lg" data-sidebar-image="yes" data-preloader="disable">
 
 <head>
 
@@ -105,15 +105,15 @@ if (str_contains($host, 'vendor')) {
     <!-- Begin page -->
     <div id="layout-wrapper">
 
-      @include('layouts.admin.topbar')
+     {{-- @include('layouts.admin.topbar')--}}
 
-        @include('layouts.admin.sidebar')
+    @include('layouts.admin.sidebar')
        
         <div class="vertical-overlay"></div>
 
         <div class="main-content">
 
-            <div class="page-content">
+            <div class="page-content py-3">
        @yield('content')
             </div>
         </div>

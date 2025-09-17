@@ -7,13 +7,30 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use \Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
-
+use App\Services\DelhiveryService;
 class FrontendController extends Controller
 {
-   
+   public function checkPincode(Request $request)
+    {
+        $delhivery=app('DelhiveryService');
+        $request->validate([
+            'pincode' => 'required|string|size:6',
+        ]);
+
+        $pincode = $request->input('pincode');
+
+        $response = $delhivery->checkPincode($pincode);
+
+        return response()->json($response);
+    }
+   public function needAndroidUpdate(Request $request)
+    { 
+        
+        return response()->json(['need'=>false,'version'=>'0.0.0']);
+    }
     public function index(Request $r)
     {
-       
+    //    return Hash::make('Tree@20252024');
       
      
        return redirect(domain_route('login'));

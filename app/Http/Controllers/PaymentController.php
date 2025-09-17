@@ -44,7 +44,7 @@ class PaymentController extends Controller
 
     }
 
-    public function buildFilter(Request $r, $query)
+    public function buildFilter(Request $r, $query,$except=[])
     {
         $get = $r->all();
         if (count($get) > 0 && $r->isMethod('get')) {
@@ -159,15 +159,11 @@ class PaymentController extends Controller
                 'name' => 'user_id',
                 'label' => 'Customer',
                 'type' => 'select',
-                'options' => getListWithRoles('Customer'),
+                'options' => getList('User',['role'=>'Customer']),
             ],
         ];
         $searchable_fields = [
-            [
-                'name' => 'user',
-                'label' => 'Title',
-                'type' => 'text',
-            ],
+           
         ];
         $this->pagination_count = 100;
         if ($request->ajax()) {
@@ -202,7 +198,7 @@ class PaymentController extends Controller
                 'image_field_names' => [],
 
             ];
-            return view('admin.refund.page', with($data));
+            return view('admin.payments.page', with($data));
         } else {
 
             $query = null;
@@ -226,7 +222,7 @@ class PaymentController extends Controller
                 'storage_folder'=>'qr_image',
                 'model_relations' => $this->model_relations,
                 'module_table_name' => 'refund',
-                'bulk_update' =>[],
+                'bulk_update' =>'',
                 'show_view_in_popup' => false,
                 'crud_title' => 'Return Item',
 

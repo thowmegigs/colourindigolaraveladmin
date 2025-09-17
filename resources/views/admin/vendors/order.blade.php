@@ -1,8 +1,8 @@
 @extends('layouts.admin.app')
 @section('content')
-    <div class="container-xxl flex-grow-1 container-p-y">
+    <div class="container-fluid flex-grow-1">
 
-     
+
         <!-- Modal --->
         <div id="crud_modal" class="modal fade" role="dialog">
             <div class="modal-dialog modal-md">
@@ -21,10 +21,10 @@
                     </div>
                     <div class="modal-body text-center">
                         <div class="spinner-border text-muted"></div>
-                        
+
                     </div>
                     <div class="modal-footer">
-                          
+
                     </div>
                 </div>
 
@@ -32,113 +32,16 @@
         </div>
         <!--Modal end-->
         <!-- Basic Bootstrap Table -->
-        <div class="card">
+        <div class="card my-0">
             <div class="card-header">
                 <div class="d-flex justify-content-between flex-wrap">
                     <h5>All {{ properPluralName($plural_lowercase) }}</h5>
-                  
+
                 </div>
-                <br>
+
                 <div class="d-flex justify-content-between flex-wrap mt-3">
-                    @if(auth()->id())
-                       <div class="d-flex flex-wrap justify-content-between " style="align-items: start;max-width:660px; ">
-                      @php 
-                      $bulk_update_columns = json_decode($bulk_update, true);
-                      @endphp
-                        @if (!empty($bulk_update_columns))
-                                <div class="" id="bulk_update">
-                                    <button type="button" class="rounded-0 btn btn-outline-success me-1" data-bs-toggle="modal"
-                                        data-bs-target="#bulk_update_modal">
-                                        <i class="bx bx-edit"></i>&nbsp;&nbsp;Bullk Update
-                                    </button>
-                                    <div id="bulk_update_modal" class="modal fade" role="dialog">
-                                        <div class="modal-dialog">
-
-                                            <!-- Modal content-->
-                                            <form id="bulk_form">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-
-                                                        <b>Bulk Update </b>
-
-                                                    </div>
-                                                    <div class="modal-body">
-
-                                                        <div style="">
-                                                            @foreach ($bulk_update_columns as $k => $val)
-                                                                <b
-                                                                    style="font-weight: 600;font-size: 13px;">{{ properSingularName($val['label']) }}</b>
-                                                                @if (!isset($val['input_type']))
-                                                                    <div class="form-group mb-2">
-                                                                        <select class="form-control" name="{{ $k }}">
-                                                                            <option value="">Select {{ $k }}</option>
-                                                                            @foreach ($val['data'] as $p)
-                                                                                <option value="{{ $p['id'] }}">
-
-                                                                                    {{ $p['name'] }}
-                                                                                </option>
-                                                                            @endforeach
-
-                                                                        </select>
-
-                                                                    </div>
-                                                                @else
-                                                                    @if ($val['input_type'] == 'select')
-                                                                        <div class="form-group mb-2">
-                                                                            <select class="form-control" name="{{ $k }}">
-                                                                                <option value="">Select {{ $k }}</option>
-                                                                                @foreach ($val['data'] as $p)
-                                                                                    <option value="{{ $p['id'] }}">
-
-                                                                                        {{ $p['name'] }}
-                                                                                    </option>
-                                                                                @endforeach
-
-                                                                            </select>
-
-                                                                        </div>
-                                                                    @elseif ($val['input_type'] == 'textarea')
-                                                                        <div class="form-group mb-2">
-                                                                            <textarea class="form-control" name="{{ $k }}">{{ $val['data'] }}</textarea>
-
-                                                                        </div>
-                                                                    @elseif ($val['input_type'] == 'text')
-                                                                        <div class="form-group mb-2">
-                                                                            <input class="form-control" name="{{ $k }}"
-                                                                                value="{{ $val['data'] }}" />
-
-                                                                        </div>
-                                                                    @endif
-                                                                @endif
-                                                            @endforeach
-                                                        </div>
-                                                        <div class="form-group mt-2">
-
-                                                        </div>
-
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-primary rounded-0"
-                                                            onClick="multiSelectCheckBoxAction('vendor_orders')">Submit</button>
-                                                        <button type="button" class="btn btn-danger rounded-0"
-                                                            data-bs-dismiss="modal">Close</button>
-                                                    </div>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                        @endif
-                        <div id="bulk_delete" style="margin-right:5px;">
-                            <button type="button" class="rounded-0 btn btn-outline-danger"
-                                onclick="bulkDelete('vendor_orders')">
-                                <i class="bx bx-trash"></i>&nbsp;&nbsp;Trash
-                            </button>
-                        </div>
-                    @endif
-                  <x-filter :data="$filterable_fields" />
-                  
-
+                    <x-groupButtonIndexPage :filterableFields="$filterable_fields" :pluralLowercase="$plural_lowercase" :bulkUpdate="$bulk_update" :moduleTableName="$module_table_name"
+                        :whichButtonsToHideArray="['trash']" />
                     <x-search :searchableFields="$searchable_fields" />
 
                 </div>
@@ -148,13 +51,30 @@
 
             </div>
             <div class="card-body">
+            <!-- Status Tabs -->
+                <ul class="nav nav-tabs mb-3" id="statusTabs">
+                    @php
+                        $statuses = ['Ordered', 'APPROVED', 'CANCELLED', 'DELIVERED','ALL'];
+                        $currentStatus = request('delivery_status', 'Ordered'); // Default is ORDERED
+                    @endphp
+
+                    @foreach ($statuses as $status)
+                        <li class="nav-item">
+                            <a class="nav-link {{ $currentStatus === $status ? 'active' : '' }}"
+                            href="{{ $status!='ALL'?request()->fullUrlWithQuery(['delivery_status' => $status, 'page' => 1]):request()->url() }}">
+                                {{ ucfirst(strtolower($status=='Ordered'?'New Order':$status)) }}
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+
                 <div class="table-responsive text-nowrap">
-                    <x-alert/>
+                    <x-alert />
                     <table class="table table-bordered">
                         <thead>
                             <tr>
-                               <th>#
-                                   <input  class="form-check-input" type="checkbox" id="check_all"  />
+                                <th>#
+                                    <input class="form-check-input" type="checkbox" id="check_all" />
 
                                 </th>
                                 @foreach ($table_columns as $t)
@@ -168,225 +88,291 @@
                             </tr>
                         </thead>
                         <tbody class="table-border-bottom-0" id="tbody">
-                           @php
+                            @php
 
-                        $table_columns1 = array_column($table_columns, 'column');
-                    @endphp
-                    @if ($list->total() > 0)
-                        @php
-                            $i = $list->perPage() * ($list->currentPage() - 1) + 1;
-                            $l = 0;
-                        @endphp
-                        @foreach ($list as $r)
-        <tr id="row-{{ $r->id }}">
-            <td> 
-                {{ $i++ }}
-                <input name="ids[]" class="form-check-input" type="checkbox" value="{{ $r->id }}" />
-               <br/><a style="text-decoration:underline!important" 
-               
-              data-vendor_id="{{$r->vendor_id }}"
-              data-order_id="{{ $r->order_id }}"
-              data-bs-toggle="modal" data-bs-target="#exampleModal" 
-            
-              class=" open-ajax-modal">View Items</a>
+                                $table_columns1 = array_column($table_columns, 'column');
+                            @endphp
+                            @if ($list->total() > 0)
+                                @php
+                                    $i = $list->perPage() * ($list->currentPage() - 1) + 1;
+                                    $l = 0;
+                                @endphp
+                                @foreach ($list as $r)
+                                    <tr id="row-{{ $r->id }}">
+                                        <td>
+                                            {{ $i++ }}
+                                            <input name="ids[]" class="form-check-input" type="checkbox"
+                                                value="{{ $r->id }}" />
+                                            <br />
+                                            <a style="cursor:pointer;text-decoration:underline!important"
+                                                data-vendor_id="{{ $r->vendor_id }}" data-order_id="{{ $r->order_id }}"
+                                                data-bs-toggle="modal" data-bs-target="#exampleModal"
+                                                class=" open-ajax-modal">View Items</a><br />
+                                            @if (auth()->user() && $r->is_completed=='No')
+                                                <a 
+                                                    data-vendor_order_id="{{ $r->id }}" data-bs-toggle="modal"
+                                                    data-bs-target="#awbModal" class="m-1 btn btn-primary btn-sm  open-awb-modal">Add Awb</a><br />
 
-            </td>
-            @foreach ($table_columns1 as $t)
-                @php   ++$l;@endphp
-            @if(str_contains($t, 'delivery_status'))
-                    <td>{{ getFriendlyShipmentStatus($r->delivery_status) }}</td>
-            @elseif(str_contains($t, 'shiprocket_order_id'))
-                    <td>{{ $r->shiprocket_order_id }}</td>
-               
-            @elseif(str_contains($t, 'net_profit'))
-                    <td>
-                      <table class="table table-bordered table-sm" style="max-width: 400px;">
-                        <tbody>
-                            <tr>
-                            <th>Sales Total</th>
-                            <td>{{ getCurrency() }}{{ $r->vendor_total }}</td>
-                            </tr>
-                            <tr>
-                            <th>Refund</th>
-                            <td>-{{ getCurrency() }}{{ $r->refunded_amount }}</td>
-                            </tr>
-                            <tr>
-                            <th>Commission</th>
-                            <td>-{{ getCurrency() }}{{ $r->commission_total }}</td>
-                            </tr>
-                            <tr>
-                            <th>Net Profit</th>
-                            <td><strong>{{ getCurrency() }}{{ $r->vendor_total - ($r->refunded_amount + $r->commission_total) }}</strong></td>
-                            </tr>
-                        </tbody>
-                        </table>
+                                                <!-- Add Shipping Charge Link -->
+                                                <a 
+                                                    data-vendor_order_id="{{ $r->id }}"
+                                                    data-current_shipping="{{ $r->shipping_cost }}" data-bs-toggle="modal"
+                                                    data-bs-target="#shippingModal" class="m-1 btn btn-info btn-sm open-shipping-modal">Update
+                                                    Shipping</a>
+                                            @endif
 
-                    </td>
-               
-                   
-                @elseif(str_contains($t, '_at') || str_contains($t, 'date'))
-                    <td>{{ formateDate($r->{$t}) }}</td>
-                @elseif(isFieldPresentInRelation($model_relations, $t) >= 0)
-                    @if (
-                        $r->{$t} &&
-                            (preg_match("/image$/", $t) ||
-                                preg_match("/_image$/", $t) ||
-                                preg_match("/_doc$/", $t) ||
-                                preg_match("/_file$/", $t) ||
-                                preg_match("/_pdf$/", $t)))
-                        <td>
+                                        </td>
+                                        @foreach ($table_columns1 as $t)
+                                            @php   ++$l;@endphp
+                                            @if (str_contains($t, 'delivery_status'))
+                                                <td>{{ getFriendlyShipmentStatus($r->delivery_status) }}</td>
+                                            @elseif(str_contains($t, 'shiprocket_order_id'))
+                                                <td>{{ $r->shiprocket_order_id }}</td>
+                                            @elseif(str_contains($t, 'net_profit'))
+                                                <td>
+                                                    <table class="table table-bordered table-sm" style="max-width: 400px;">
+                                                        <tbody>
+                                                            <tr>
+                                                                <th>Sales Total</th>
+                                                                <td>{{ getCurrency() }}{{ $r->vendor_total }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>Refund</th>
+                                                                <td>-{{ getCurrency() }}{{ $r->additional_refund }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>Delivery Charge</th>
+                                                                <td id="shipping-cost-{{ $r->id }}">
+                                                                    -{{ getCurrency() }}{{ $r->shipping_cost }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>Commission</th>
+                                                                <td>-{{ getCurrency() }}{{ $r->commission_total }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>Net Profit</th>
+                                                                <td><strong
+                                                                        id="net-profit-{{ $r->id }}">{{ getCurrency() }}{{ $r->vendor_total - ($r->additional_refund + $r->shipping_cost + $r->commission_total) }}</strong>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
 
-                            <x-singleFile :fileName="$r->{$t}" :modelName="$module" :folderName="$storage_folder" :fieldName="$t"
-                                :rowid="$r->id" />
-                        </td>
-                    @elseif(preg_match("/images$/", $t) ||
-                            preg_match("/_images$/", $t) ||
-                            preg_match("/_docs$/", $t) ||
-                            preg_match("/_files$/", $t) ||
-                            preg_match("/_pdfs$/", $t))
-                        <td>
-                            <!-- here image list is list of table row in object form *****-->
+                                                </td>
+                                            @elseif(str_contains($t, '_at') || str_contains($t, 'date'))
+                                                <td>{{ formateDate($r->{$t}) }}</td>
+                                            @elseif(isFieldPresentInRelation($model_relations, $t) >= 0)
+                                                @if (
+                                                    $r->{$t} &&
+                                                        (preg_match("/image$/", $t) ||
+                                                            preg_match("/_image$/", $t) ||
+                                                            preg_match("/_doc$/", $t) ||
+                                                            preg_match("/_file$/", $t) ||
+                                                            preg_match("/_pdf$/", $t)))
+                                                    <td>
 
-                            <x-showImages :row=$r :fieldName=$t :storageFolder=$storage_folder :tableName="getTableNameFromImageFieldList($image_field_names, $t)" />
-                        </td>
-                    @else
-                        <td>{{ getForeignKeyFieldValue($model_relations, $r, $t) }}</td>
-                    @endif
-                @elseif(isFieldPresentInRelation($model_relations, $t) < 0 &&
-                        $r->{$t} &&
-                        (preg_match("/image$/", $t) ||
-                            preg_match("/_image$/", $t) ||
-                            preg_match("/_doc$/", $t) ||
-                            preg_match("/_file$/", $t) ||
-                            preg_match("/_pdf$/", $t)))
-                    <td>
+                                                        <x-singleFile :fileName="$r->{$t}" :modelName="$module" :folderName="$storage_folder"
+                                                            :fieldName="$t" :rowid="$r->id" />
+                                                    </td>
+                                                @elseif(preg_match("/images$/", $t) ||
+                                                        preg_match("/_images$/", $t) ||
+                                                        preg_match("/_docs$/", $t) ||
+                                                        preg_match("/_files$/", $t) ||
+                                                        preg_match("/_pdfs$/", $t))
+                                                    <td>
+                                                        <!-- here image list is list of table row in object form *****-->
 
-                        <x-singleFile :fileName="$r->{$t}" :modelName="$module" :folderName="$storage_folder" :fieldName="$t"
-                            :rowid="$r->id" />
-                    </td>
-                @elseif(isFieldPresentInRelation($model_relations, $t) < 0 &&
-                        (preg_match("/images$/", $t) ||
-                            preg_match("/_images$/", $t) ||
-                            preg_match("/_docs$/", $t) ||
-                            preg_match("/_files$/", $t) ||
-                            preg_match("/_pdfs$/", $t)))
-                    <td>
-                        <!-- here image list is list of table row in object form *****-->
+                                                        <x-showImages :row=$r :fieldName=$t :storageFolder=$storage_folder
+                                                            :tableName="getTableNameFromImageFieldList(
+                                                                $image_field_names,
+                                                                $t,
+                                                            )" />
+                                                    </td>
+                                                @else
+                                                    <td>{{ getForeignKeyFieldValue($model_relations, $r, $t) }}</td>
+                                                @endif
+                                            @elseif(isFieldPresentInRelation($model_relations, $t) < 0 &&
+                                                    $r->{$t} &&
+                                                    (preg_match("/image$/", $t) ||
+                                                        preg_match("/_image$/", $t) ||
+                                                        preg_match("/_doc$/", $t) ||
+                                                        preg_match("/_file$/", $t) ||
+                                                        preg_match("/_pdf$/", $t)))
+                                                <td>
 
-                        <x-showImages :row=$r :fieldName=$t :storageFolder=$storage_folder :tableName="getTableNameFromImageFieldList($image_field_names, $t)" />
-                    </td>
-                @else
-                    <td class="text-start">
+                                                    <x-singleFile :fileName="$r->{$t}" :modelName="$module" :folderName="$storage_folder"
+                                                        :fieldName="$t" :rowid="$r->id" />
+                                                </td>
+                                            @elseif(isFieldPresentInRelation($model_relations, $t) < 0 &&
+                                                    (preg_match("/images$/", $t) ||
+                                                        preg_match("/_images$/", $t) ||
+                                                        preg_match("/_docs$/", $t) ||
+                                                        preg_match("/_files$/", $t) ||
+                                                        preg_match("/_pdfs$/", $t)))
+                                                <td>
+                                                    <!-- here image list is list of table row in object form *****-->
 
-                        @php
-                            if (!is_numeric($r->{$t})) {
-                                $tr = json_decode($r->{$t}, true);
+                                                    <x-showImages :row=$r :fieldName=$t :storageFolder=$storage_folder
+                                                        :tableName="getTableNameFromImageFieldList(
+                                                            $image_field_names,
+                                                            $t,
+                                                        )" />
+                                                </td>
+                                            @else
+                                                <td class="text-start">
 
-                                $by_json_key = isset($table_columns[$l - 1]['by_json_key']) ? $table_columns[$l - 1]['by_json_key'] : 'id';
-                                if ($tr !== null) {
-                                    $hide_columns = isset($table_columns[$l - 1]['hide_columns_in_json_view']) ? $table_columns[$l - 1]['hide_columns_in_json_view'] : [];
-                                    if (!empty($repeating_group_inputs) && in_array($t, array_column($repeating_group_inputs, 'colname'))) {
-                                        if (count($hide_columns) > 0) {
-                                            $tr = array_map(function ($v) use ($hide_columns) {
-                                                foreach ($hide_columns as $col) {
-                                                    unset($v[$col]);
-                                                }
-                                                return $v;
-                                            }, $tr);
-                                        }
-                                        if (isset($table_columns[$l - 1]['show_json_button_click'])) {
-                                            if ($table_columns[$l - 1]['show_json_button_click']) {
-                                                echo showArrayInColumn($tr, $l, $by_json_key);
-                                            } else {
-                                                echo showArrayInColumnNotButtonForm($tr, $l, $by_json_key);
-                                            }
-                                        } else {
-                                            echo showArrayInColumn($tr, $l, $by_json_key);
-                                        }
-                                    } else {
-                                        if (!isPlainArray($tr)) {
-                                            echo showArrayWithNamesOnly($tr);
-                                        } else {
-                                            echo $r->{$t};
-                                        }
-                                    }
-                                } else {
-                                    echo $r->{$t};
-                                }
-                            } else {
-                                echo $r->{$t};
-                            }
+                                                    @php
+                                                        if (!is_numeric($r->{$t})) {
+                                                            $tr = json_decode($r->{$t}, true);
 
-                        @endphp
-                    </td>
-                @endif
-            @endforeach
-            <td><div class="d-flex flex-column gap-2">
-            @if(is_null($r->shiprocket_shipment_id))
-                @if(!auth()->id())
-                     @if($r->is_approved_by_vendor=='No')
-                        <button type="button" 
-                        onClick="approveStatusForVendorOrder({!! $r->id !!},'Yes')"
-                        
-                        class="btn btn-success btn-sm btn-outline">Approve </button>
-                        @else
-                        <button type="button"
-                        onClick="approveStatusForVendorOrder({!! $r->id !!},'No')" 
-                            class=" open-ajax-modal btn btn-danger btn-sm btn-outline">Reject </button>
-                        @endif
-                @else 
-                  {{$r->is_approved_by_vendor=='Yes'?"Vendor Accepted":""}}
-                @endif
-          
-              @else
-            <button class="btn btn-sm btn-success generate-doc"
-                        data-id="{{ $r->shiprocket_order_id }}"
-                        data-type="invoice">Invoice</button>
-                        </div>
-             @if($r->awb)
-              <a href="/label/{{$r->id}}" class="btn btn-sm btn-primary"
-                      >Label</a>
+                                                            $by_json_key = isset($table_columns[$l - 1]['by_json_key'])
+                                                                ? $table_columns[$l - 1]['by_json_key']
+                                                                : 'id';
+                                                            if ($tr !== null) {
+                                                                $hide_columns = isset(
+                                                                    $table_columns[$l - 1]['hide_columns_in_json_view'],
+                                                                )
+                                                                    ? $table_columns[$l - 1][
+                                                                        'hide_columns_in_json_view'
+                                                                    ]
+                                                                    : [];
+                                                                if (
+                                                                    !empty($repeating_group_inputs) &&
+                                                                    in_array(
+                                                                        $t,
+                                                                        array_column(
+                                                                            $repeating_group_inputs,
+                                                                            'colname',
+                                                                        ),
+                                                                    )
+                                                                ) {
+                                                                    if (count($hide_columns) > 0) {
+                                                                        $tr = array_map(function ($v) use (
+                                                                            $hide_columns,
+                                                                        ) {
+                                                                            foreach ($hide_columns as $col) {
+                                                                                unset($v[$col]);
+                                                                            }
+                                                                            return $v;
+                                                                        }, $tr);
+                                                                    }
+                                                                    if (
+                                                                        isset(
+                                                                            $table_columns[$l - 1][
+                                                                                'show_json_button_click'
+                                                                            ],
+                                                                        )
+                                                                    ) {
+                                                                        if (
+                                                                            $table_columns[$l - 1][
+                                                                                'show_json_button_click'
+                                                                            ]
+                                                                        ) {
+                                                                            echo showArrayInColumn(
+                                                                                $tr,
+                                                                                $l,
+                                                                                $by_json_key,
+                                                                            );
+                                                                        } else {
+                                                                            echo showArrayInColumnNotButtonForm(
+                                                                                $tr,
+                                                                                $l,
+                                                                                $by_json_key,
+                                                                            );
+                                                                        }
+                                                                    } else {
+                                                                        echo showArrayInColumn($tr, $l, $by_json_key);
+                                                                    }
+                                                                } else {
+                                                                    if (!isPlainArray($tr)) {
+                                                                        echo showArrayWithNamesOnly($tr);
+                                                                    } else {
+                                                                        echo $r->{$t};
+                                                                    }
+                                                                }
+                                                            } else {
+                                                                echo $r->{$t};
+                                                            }
+                                                        } else {
+                                                            echo $r->{$t};
+                                                        }
 
-                <button class="btn btn-sm btn-info generate-doc"
-                        data-id="{{ $r->shiprocket_shipment_id }}"
-                        data-type="manifest">Manifest</button>
-              @endif
-              @endif
-               
-           
-           
-            </td>
-
-
-        </tr>
-    @endforeach
-    <td colspan='7'>{!! $list->links() !!}</td>
-    </tr>
+                                                    @endphp
+                                                </td>
+                                            @endif
+                                        @endforeach
+                                        <td>
+                                            <div class="d-flex flex-column gap-2">
+                                                @if (is_null($r->shiprocket_shipment_id))
+                                                    @if (!auth()->id())
+                                                        <!-- @if ($r->is_approved_by_vendor == 'No')
+    -->
+                                                        <button type="button"
+                                                            onClick="approveStatusForVendorOrder({!! $r->id !!},'Yes')"
+                                                            class="btn btn-success btn-sm btn-outline">Approve </button>
+                                                        <!--
 @else
-    <tr>
-        <td colspan="{{ count($table_columns) + 1 }}" align="center">No records</td>
-    </tr>
-@endif
-<div id="{{ strtolower($module) }}_modal" class="modal fade" role="dialog">
-    <div class="modal-dialog">
+    -->
+                                                        <button type="button"
+                                                            onClick="approveStatusForVendorOrder({!! $r->id !!},'No')"
+                                                            class=" open-ajax-modal btn btn-danger btn-sm btn-outline">Reject
+                                                        </button>
+                                                        <!--
+    @endif -->
+                                                    @else
+                                                        {{ $r->is_approved_by_vendor == 'Yes' ? 'Vendor Accepted' : '' }}
+                                                    @endif
+                                                @else
+                                                    @if ($r->awb)
+                                                        <button class="btn btn-sm btn-success generate-doc"
+                                                            data-id="{{ $r->shiprocket_order_id }}"
+                                                            data-type="invoice">Invoice</button>
 
-        <!-- Modal content-->
-        <div class="modal-content">
-            <div class="modal-header">
+                                                        <a href="/label/{{ $r->id }}"
+                                                            class="btn btn-sm btn-primary">Label</a>
 
-                <h4 class="modal-title">View {{ $module }}</h4>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center">
-                <div class="spinner-border text-muted"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
+                                                        <!-- <button class="btn btn-sm btn-info generate-doc"
+                            data-id="{{ $r->shiprocket_shipment_id }}"
+                            data-type="manifest">Manifest</button> -->
+                                                    @endif
+                                                @endif
 
-    </div>
-</div>
+
+
+                                        </td>
+
+
+                                    </tr>
+                                @endforeach
+                                <td colspan='7'>{!! $list->appends(request()->except('page'))->links() !!}
+</td>
+                                </tr>
+                            @else
+                                <tr>
+                                    <td colspan="{{ count($table_columns) + 1 }}" align="center">No records</td>
+                                </tr>
+                            @endif
+                            <div id="{{ strtolower($module) }}_modal" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+
+                                    <!-- Modal content-->
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+
+                                            <h4 class="modal-title">View {{ $module }}</h4>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body text-center">
+                                            <div class="spinner-border text-muted"></div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-primary"
+                                                data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
 
                         </tbody>
                     </table>
@@ -400,82 +386,314 @@
             </div>
         </div>
     </div>
-<div class="modal fade" id="dynamicModal" tabindex="-1" aria-labelledby="dynamicModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="dynamicModalLabel">Order Items Detail</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body" id="dynamicModalBody">
-        <!-- Dynamic content will be loaded here -->
-      </div>
+
+    <!-- Order Items Detail Modal -->
+    <div class="modal fade" id="dynamicModal" tabindex="-1" aria-labelledby="dynamicModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="dynamicModalLabel">Order Items Detail</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="dynamicModalBody">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
+
+    <!-- AWB Modal -->
+    <div class="modal fade" id="awbModal" tabindex="-1" aria-labelledby="awbModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="awbModalLabel">Add Awb Code</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="awb">AWB Code</label>
+                            <input type="text" id="awb" class="form-control" placeholder="Enter Awb Code">
+                            <input type="hidden" id="inp_vendor_order_id" class="form-control">
+                        </div>
+                        <button type="button" class="btn btn-primary mt-3" onClick="submitAwb()">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shipping Charge Update Modal -->
+    <div class="modal fade" id="shippingModal" tabindex="-1" aria-labelledby="shippingModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="shippingModalLabel">Update Shipping Charge</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="shippingForm">
+
+                        <div class="form-group mb-3">
+                            <label for="new_shipping" class="form-label">New Shipping Charge <span
+                                    class="text-danger">*</span></label>
+                            <input type="number" id="new_shipping" class="form-control"
+                                placeholder="Enter new shipping charge" step="0.01" min="0" required>
+                            <div class="invalid-feedback" id="shipping-error"></div>
+                        </div>
+
+                        <input type="hidden" id="vendor_order_id">
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="submitShipping">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        Update Shipping
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 @push('scripts')
-  <script>
-$(document).ready(function () {
-  $(document).on('click', '.open-ajax-modal', function () {
-    const vendor_id = $(this).data('vendor_id');
-    const order_id = $(this).data('order_id');
-    
-    Swal.fire({
-      title: 'Loading...',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
+    <script>
+        $(document).ready(function() {
+            // Existing code for order items modal
+            $(document).on('click', '.open-ajax-modal', function() {
+                const vendor_id = $(this).data('vendor_id');
+                const order_id = $(this).data('order_id');
 
-    $.ajax({
-      url: '{!! domain_route("vendor_order_detail")!!}',
-      type: 'POST',
-      data:{order_id,vendor_id},
-      success: function (response) {
-        Swal.close();
-        $('#dynamicModalBody').html(response);
-        const modal = new bootstrap.Modal(document.getElementById('dynamicModal'));
-        modal.show();
-      },
-      error: function (xhr) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Failed',
-          text: 'Could not load row details.'
+                Swal.fire({
+                    title: 'Loading...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                $.ajax({
+                    url: '{!! domain_route('vendor_order_detail') !!}',
+                    type: 'POST',
+                    data: {
+                        order_id,
+                        vendor_id
+                    },
+                    success: function(response) {
+                        Swal.close();
+                        $('#dynamicModalBody').html(response);
+                        const modal = new bootstrap.Modal(document.getElementById(
+                            'dynamicModal'));
+                        modal.show();
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Failed',
+                            text: 'Could not load row details.'
+                        });
+                        console.error(xhr.responseText);
+                    }
+                });
+            });
+
+            // Existing code for AWB modal
+            $(document).on('click', '.open-awb-modal', function() {
+                const vendor_order_id = $(this).data('vendor_order_id');
+                $('#inp_vendor_order_id').val(vendor_order_id);
+                $('#awb').val(''); // Clear previous value
+            });
+
+            // NEW: Shipping charge modal functionality
+            $(document).on('click', '.open-shipping-modal', function() {
+                const vendor_order_id = $(this).data('vendor_order_id');
+                const current_shipping = $(this).data('current_shipping') || 0;
+
+                $('#vendor_order_id').val(vendor_order_id);
+
+                $('#new_shipping').val('');
+
+                $('#shipping-error').text('');
+                $('#new_shipping').removeClass('is-invalid');
+            });
+
+            // NEW: Submit shipping charge update
+            $(document).on('click', '#submitShipping', function() {
+                const btn = $(this);
+                const spinner = btn.find('.spinner-border');
+                const vendor_order_id = $('#vendor_order_id').val();
+                const new_shipping = $('#new_shipping').val();
+
+                // Validation
+                if (!new_shipping || parseFloat(new_shipping) < 0) {
+                    $('#new_shipping').addClass('is-invalid');
+                    $('#shipping-error').text('Please enter a valid shipping charge');
+                    return;
+                }
+
+                $('#new_shipping').removeClass('is-invalid');
+                $('#shipping-error').text('');
+
+                // Show loading state
+                btn.prop('disabled', true);
+                spinner.removeClass('d-none');
+
+                $.ajax({
+                    url: '/singleFieldUpdateFromTable',
+                    type: 'POST',
+                    data: {
+                        table: 'vendor_orders',
+                        val: parseFloat(new_shipping).toFixed(2),
+                        field: 'shipping_cost',
+                        id: vendor_order_id,
+
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        btn.prop('disabled', false);
+                        spinner.addClass('d-none');
+
+                        if (response.success) {
+                            // Update the UI with new shipping cost
+                            const currency = '{{ getCurrency() }}';
+                            const newShippingFormatted = currency + parseFloat(new_shipping)
+                                .toFixed(2);
+                            $('#shipping-cost-' + vendor_order_id).text('-' +
+                                newShippingFormatted);
+
+                            // Update the data attribute for the link
+
+                            // Close modal
+                            $('#shippingModal').modal('hide');
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Shipping charge updated successfully!',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message ||
+                                    'Failed to update shipping charge'
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        btn.prop('disabled', false);
+                        spinner.addClass('d-none');
+
+                        let errorMessage = 'Failed to update shipping charge';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        } else if (xhr.responseText) {
+                            errorMessage = xhr.responseText;
+                        }
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: errorMessage
+                        });
+                    }
+                });
+            });
+
+
+
+            // Existing generate document functionality
+            $(document).on('click', '.generate-doc', function() {
+                const btn = $(this);
+                const id = btn.data('id');
+                const type = btn.data('type');
+
+                btn.prop('disabled', true).text('Generating...');
+
+                $.post('{!! domain_route('generate_vendor_doc') !!}', {
+                    id,
+                    type: type,
+                    _token: '{{ csrf_token() }}'
+                }).done(function(response) {
+                    console.log(response);
+                    try {
+                        window.open(response.url, '_blank');
+                    } catch (e) {
+                        console.error("Window open failed:", e);
+                    }
+                }).fail(function(res) {
+
+                    alert(res.responseJSON.error);
+                }).always(function() {
+                    btn.prop('disabled', false).text(type.charAt(0).toUpperCase() + type.slice(1));
+                });
+            });
+
         });
-        console.error(xhr.responseText);
-      }
-    });
-  });
-  $(document).on('click', '.generate-doc', function () {
-    const btn = $(this);
-    const id = btn.data('id');
-    const type = btn.data('type');
 
-    btn.prop('disabled', true).text('Generating...');
+        // Renamed function to be more specific
+        function submitAwb() {
+            const awb = $('#awb').val()
+            const id = $('#inp_vendor_order_id').val()
 
-    $.post('{!! domain_route("generate_vendor_doc")!!}', {
-        id,
-        type: type,
-        _token: '{{ csrf_token() }}'
-    }).done(function (response) {
-         console.log(response);
-            try {
-                window.open(response.url, '_blank');
-            } catch (e) {
-                console.error("Window open failed:", e);
+            if (awb.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: 'Please enter AWB code'
+                });
+                return;
             }
-    }).fail(function (res) {
-       
-        alert(res.responseJSON.error);
-    }).always(function () {
-        btn.prop('disabled', false).text(type.charAt(0).toUpperCase() + type.slice(1));
-    });
-});
 
-});
+            Swal.fire({
+                title: 'Loading...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
-</script>
+            $.ajax({
+                url: '/singleFieldUpdateFromTable',
+                type: 'POST',
+                data: {
+                    table: 'vendor_orders',
+                    val: awb,
+                    field: 'awb',
+                    id: id,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    Swal.close()
+                    if (response.success) {
+                        $('#awbModal').modal('hide');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'AWB updated successfully!'
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    Swal.close()
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Failed',
+                        text: xhr.responseText
+                    });
+                    console.error(xhr.responseText);
+                }
+            });
+        }
+    </script>
 @endpush

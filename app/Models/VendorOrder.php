@@ -20,7 +20,82 @@ class VendorOrder  extends Model
      public function getTableColumns() {
         return $this->getConnection()->getSchemaBuilder()->getColumnListing($this->getTable());
     }
-    
+
+public function canBeCompleted(): bool
+{
+    $statuses = json_decode($this->delivery_status_updates, true);
+    if (!$statuses || !is_array($statuses)) {
+        return false;
+    }
+
+    $latestDeliveryDate = null;
+
+    // Step 1: Get latest delivery/exchange completion date
+    foreach ($statuses as $status) {
+        if (!isset($status['status'])) {
+            continue;
+        }
+
+        $currentStatus = strtoupper($status['status']);
+
+        if (in_array($currentStatus, ['DELIVERED','EXCHANGE COMPLETED']) && !empty($status['date'])) {
+            $date = Carbon::parse($status['date']);
+            if (is_null($latestDeliveryDate) || $date->gt($latestDeliveryDate)) {
+                $latestDeliveryDate = $date;
+            }
+        }
+    }
+
+    // If no delivery recorded yet
+    if (!$latestDeliveryDate) {
+        return false;
+    }
+
+    // Step 2: Check if any return/exchange is active from return_shipments
+    $hasActiveReturnOrExchange = false;
+
+    $returnShipments = \App\Models\ReturnShipment::where('vendor_order_id', $this->id)->get();
+
+    foreach ($returnShipments as $return) {
+        $returnUpdates = json_decode($return->return_status_updates, true);
+
+        if (!$returnUpdates || !is_array($returnUpdates)) {
+            continue;
+        }
+
+        foreach ($returnUpdates as $update) {
+            if (!isset($update['status'])) {
+                continue;
+            }
+
+            $returnStatus = strtoupper($update['status']);
+
+            if (
+                Str::contains($returnStatus, 'RETURN') ||
+                Str::contains($returnStatus, 'EXCHANGE')
+            ) {
+                if (
+                    Str::contains($returnStatus, 'INITIATED') ||
+                    Str::contains($returnStatus, 'PENDING') ||
+                    Str::contains($returnStatus, 'PROCESSING')
+                ) {
+                    $hasActiveReturnOrExchange = true;
+                    break 2; // No need to check further
+                }
+            }
+        }
+    }
+
+    if ($hasActiveReturnOrExchange) {
+        return false;
+    }
+   $return_window_days=\App\Models\Setting::first()->return_days;
+   $returnWindowDays = $return_window_days ?? 3;
+   $completionDeadline = $latestDeliveryDate->copy()->addDays($returnWindowDays);
+
+    return now()->greaterThan($completionDeadline);
+}
+
  public function  vendor(){
     return $this->belongsTo(Vendor::class);
  }

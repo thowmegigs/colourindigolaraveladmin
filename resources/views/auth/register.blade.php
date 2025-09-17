@@ -7,12 +7,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Seller Registration | Colourindigo Seller Registration</title>
     <!-- Bootstrap 5 CSS -->
-      <link rel="shortcut icon" href="https://colourindigo.com/favicon-16x16.png">
+    <link rel="shortcut icon" href="https://colourindigo.com/favicon-16x16.png">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{{asset('commonjs/select2/select2.css')}}">
+    <link rel="stylesheet" href="{{ asset('commonjs/select2/select2.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/libs/sweetalert2/sweetalert2.min.css') }}">
     <style>
         :root {
             --primary-color: #ae1313;
@@ -37,9 +38,11 @@
             display: flex;
             align-items: center;
         }
-    .input-group-text{
-      height:38px;
-    }
+
+        .input-group-text {
+            height: 38px;
+        }
+
         .registration-card {
             border-radius: var(--border-radius);
             border: none;
@@ -50,7 +53,7 @@
         .card-header {
             /* background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white; */
-            background:#c629291a;
+            background: #c629291a;
             border-bottom: none;
             padding: 1rem;
         }
@@ -63,7 +66,7 @@
         .card-header p {
             font-size: 0.9rem;
             margin-bottom: 0;
-            color:black;
+            color: black;
         }
 
         .section-title {
@@ -321,52 +324,63 @@
             padding: 0.5rem 0.75rem;
         }
 
-        .input-group > .form-control {
+        .input-group>.form-control {
             height: 38px;
         }
 
-        .input-group > .form-select {
+        .input-group>.form-select {
             height: 38px;
         }
-        .select2-selection__rendered{
-              font-size: 14px;
-    color: #7f8077;
+
+        .select2-selection__rendered {
+            font-size: 14px;
+            color: #7f8077;
         }
-  .select2-selection--single{
-    height:38px!important;
-  }
-  .select2-container--default .select2-results__option,.select2-container--default .select2-selection--single .select2-selection__rendered  {
-  font-size: 11px;color: #7f8077;
-}
- .select2-container--default .select2-selection--single .select2-selection__rendered  {
-  font-size: 14px;color: #7f8077;
-}
-.input-group .select2-container {
-  flex: 1 1 auto;
-  width: 1% !important;
-}
 
-/* Restore border & padding like Bootstrap's form-select */
-.select2-container--default .select2-selection--single {
-  height: calc(2.375rem + 2px); /* Matches .form-select height (Bootstrap 5) */
-  padding: 0.375rem 0.75rem;
-  border: 1px solid #ced4da;
-  border-left: none; /* Avoid double border next to input-group-text */
-  border-radius: 0 0.375rem 0.375rem 0;
-  background-color: #fff;
-  box-sizing: border-box;
-}
+        .select2-selection--single {
+            height: 38px !important;
+        }
 
-/* Align arrow vertically */
-.select2-container--default .select2-selection--single .select2-selection__arrow {
-  height: 100%;
-  right: 10px;
-}
+        .select2-container--default .select2-results__option,
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            font-size: 11px;
+            color: #7f8077;
+        }
 
-/* Adjust position inside input group */
-.input-group .select2-selection--single {
-  border-left: none;
-}
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            font-size: 14px;
+            color: #7f8077;
+        }
+
+        .input-group .select2-container {
+            flex: 1 1 auto;
+            width: 1% !important;
+        }
+
+        /* Restore border & padding like Bootstrap's form-select */
+        .select2-container--default .select2-selection--single {
+            height: calc(2.375rem + 2px);
+            /* Matches .form-select height (Bootstrap 5) */
+            padding: 0.375rem 0.75rem;
+            border: 1px solid #ced4da;
+            border-left: none;
+            /* Avoid double border next to input-group-text */
+            border-radius: 0 0.375rem 0.375rem 0;
+            background-color: #fff;
+            box-sizing: border-box;
+        }
+
+        /* Align arrow vertically */
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 100%;
+            right: 10px;
+        }
+
+        /* Adjust position inside input group */
+        .input-group .select2-selection--single {
+            border-left: none;
+        }
+
         /* Password strength */
         .password-requirements {
             font-size: 0.75rem;
@@ -462,10 +476,9 @@
                 <div class="col-lg-8 col-md-10">
                     <div class="card registration-card">
                         <div class="card-header text-center" style="padding-top: 20px;">
-                            <img src="https://colourindigo.com/logo.png" style="height:40px;width:100px;" class="text-center"/>
+                            <img src="https://colourindigo.com/logo.png" style="height:40px;width:100px;"
+                                class="text-center" />
                             <div class="d-flex align-items-center justify-content-center mb-1">
-
-                                <!-- <i class="bi bi-shop text-dark me-2 fs-4"></i> -->
                                 <h1>Seller Registration</h1>
                             </div>
                             <p class="text-dark">Join our marketplace and start selling today</p>
@@ -510,96 +523,36 @@
                                             </label>
                                             <div class="input-group">
                                                 <span class="input-group-text"><i class="bi bi-shop"></i></span>
-                                                <input type="text" class="form-control" id="businessName" name="business_name" placeholder="Your store or business name" required>
+                                                <input type="text" class="form-control" id="businessName"
+                                                    name="business_name" placeholder="Your store or business name"
+                                                    required>
                                             </div>
                                         </div>
-                                     <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label for="email" class="form-label">
-                                                Business Email
-                                            </label>
-                                            <div class="input-group">
-                                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                                <input type="email" class="form-control" id="email" name="email" placeholder="Your business email address" required>
-                                            </div>
-                                            <div class="form-text">We'll send verification code to this email</div>
-                                        </div>
-
-                                        <div class="col-md-6 mb-3">
-                                            <label for="phone" class="form-label">
-                                                Contact Number
-                                            </label>
-                                            <div class="input-group">
-                                                <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-                                                <input type="tel" class="form-control" id="phone" name="phone" placeholder="Business contact number" required>
-                                            </div>
-                                            <div class="form-text">We'll send verification code to this phone</div>
-                                        </div>
-                                    </div>
-                                    </div>
-
-                                    <!-- Business Address Section -->
-                                    <div class="form-section">
-                                        <h4 class="section-subtitle">Business Address</h4>
-                                        <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label for="streetAddress" class="form-label">
-                                                Address 1 
-                                               </label>
-                                            <div class="input-group">
-                                                <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
-                                                <input type="text" class="form-control" placeholder="Enter address including house no/flat no and locality name" id="streetAddress" name="address"  minlength="10" maxlength="80" required>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="streetAddress" class="form-label">
-                                                 Address 2
-                                            </label>
-                                            <div class="input-group">
-                                                <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
-                                                <input type="text" class="form-control" id="streetAddress2" name="address2" placeholder="Enter remaining address part" minlength="10" maxlength="80" required>
-                                            </div>
-                                        </div>
-                                        </div>
-
-
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label for="storeCategory" class="form-label">
-                                                    State
+                                                <label for="email" class="form-label">
+                                                    Business Email
                                                 </label>
                                                 <div class="input-group">
-                                                    <span class="input-group-text"><i class="bi bi-map"></i></span>
-                                                    <select class="form-select" id="state_id" name="state_id" required>
-                                                        <option value="">Select State</option>
-                                                      @foreach($states as $st)
-                                                         <option value="{{$st->id}}">{{$st->name}}</option>
-                                                      @endforeach
-                                                    </select>
+                                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                                    <input type="email" class="form-control" id="email"
+                                                        name="email" placeholder="Your business email address"
+                                                        required>
                                                 </div>
+                                                <div class="form-text">We'll send verification code to this email</div>
                                             </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label for="state" class="form-label">
-                                                    City
-                                                </label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text"><i class="bi bi-map"></i></span>
-                                                    <select class="form-select select2-ajax" id="city_id" name="city_id" required disabled>
-                                                        <option value="">Select City</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label for="postalCode" class="form-label">
-                                                    Postal/ZIP Code
+                                                <label for="phone" class="form-label">
+                                                    Contact Number
                                                 </label>
                                                 <div class="input-group">
-                                                    <span class="input-group-text"><i class="bi bi-mailbox"></i></span>
-                                                    <input type="number" class="form-control" id="postalCode" name="pincode" placeholder="Postal/ZIP code" required>
+                                                    <span class="input-group-text"><i
+                                                            class="bi bi-telephone"></i></span>
+                                                    <input type="tel" class="form-control" id="phone"
+                                                        name="phone" placeholder="Business contact number" required>
                                                 </div>
+                                                <div class="form-text">We'll send verification code to this phone</div>
                                             </div>
                                         </div>
                                     </div>
@@ -613,7 +566,8 @@
                                             </label>
                                             <div class="input-group">
                                                 <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                                                <input type="password" class="form-control" id="password" name="password" placeholder="Create a secure password" required>
+                                                <input type="password" class="form-control" id="password"
+                                                    name="password" placeholder="Create a secure password" required>
                                                 <span class="input-group-text password-toggle" id="togglePassword">
                                                     <i class="bi bi-eye"></i>
                                                 </span>
@@ -635,8 +589,11 @@
                                             </label>
                                             <div class="input-group">
                                                 <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
-                                                <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" placeholder="Confirm your password" required>
-                                                <span class="input-group-text password-toggle" id="toggleConfirmPassword">
+                                                <input type="password" class="form-control"
+                                                    id="password_confirmation" name="password_confirmation"
+                                                    placeholder="Confirm your password" required>
+                                                <span class="input-group-text password-toggle"
+                                                    id="toggleConfirmPassword">
                                                     <i class="bi bi-eye"></i>
                                                 </span>
                                             </div>
@@ -650,7 +607,8 @@
                                 </form>
                             </div>
 
-                            <!-- Step 2: OTP Verification -->
+                            <!-- Verification & Completion Steps remain unchanged -->
+                              <!-- Step 2: OTP Verification -->
                             <div id="verificationForm" style="display: none;">
                                 <div class="text-center mb-3">
                                     <div class="verification-icon mb-2">
@@ -811,15 +769,7 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="d-flex mb-2">
-                                                    <div class="detail-icon">
-                                                        <i class="bi bi-geo-alt"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div class="detail-label">Address</div>
-                                                        <div class="detail-value" id="summaryAddress"></div>
-                                                    </div>
-                                                </div>
+                                               
                                             </div>
                                         </div>
                                     </div>
@@ -840,54 +790,21 @@
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 
     <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ asset('commonjs/jquery.min.js') }}"></script>
     <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ asset('assets/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="{{asset('commonjs/select2/select2.js')}}"></script>
+    <script src="{{ asset('assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
+    <script src="{{ asset('commonjs/select2/select2.js') }}"></script>
 
     <script>
         $(document).ready(function() {
             // Setup CSRF token for all AJAX requests
-            $('#state_id').select2({
-                minimumResultsForSearch: 5,
-                width: '100%'
-            })
-            $('#city_id').select2({
-                width: '100%',
-                placeholder: 'Select City',
-                allowClear: true
-            });
-            
-            // On state change, fetch cities via AJAX
-            $('#state_id').on('change', function () {
-                let stateId = $(this).val();
-
-                if (stateId) {
-                    $.ajax({
-                        url: '/getCities',
-                        type: 'POST',
-                        data: {state_id: stateId},
-                        success: function (data) {
-                            $('#city_id').empty().append('<option value="">Select City</option>');
-                            $('#city_id').html(data['message']);
-                            
-                            $('#city_id').prop('disabled', false).trigger('change');
-                        },
-                        error: function () {
-                            alert('Unable to fetch cities');
-                        }
-                    });
-                } else {
-                    $('#city_id').empty().append('<option value="">Select City</option>').prop('disabled', true);
-                }
-            });
-            
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -899,10 +816,6 @@
                 business_name: '',
                 email: '',
                 phone: '',
-                address: '',
-                city_id: '',
-                state_id: '',
-                pincode: '',
                 password: '',
                 password_confirmation: '',
                 isEmailVerified: false,
@@ -916,7 +829,6 @@
             $('#togglePassword').click(function() {
                 const passwordInput = $('#password');
                 const icon = $(this).find('i');
-                
                 if (passwordInput.attr('type') === 'password') {
                     passwordInput.attr('type', 'text');
                     icon.removeClass('bi-eye').addClass('bi-eye-slash');
@@ -929,7 +841,6 @@
             $('#toggleConfirmPassword').click(function() {
                 const passwordInput = $('#password_confirmation');
                 const icon = $(this).find('i');
-                
                 if (passwordInput.attr('type') === 'password') {
                     passwordInput.attr('type', 'text');
                     icon.removeClass('bi-eye').addClass('bi-eye-slash');
@@ -943,11 +854,9 @@
             function updateSteps(step) {
                 $('.step').removeClass('step-active');
                 $('#step1').addClass('step-active');
-                
                 if (step >= 2) {
                     $('#step2').addClass('step-active');
                 }
-                
                 if (step >= 3) {
                     $('#step3').addClass('step-active');
                 }
@@ -956,7 +865,6 @@
             // Show the appropriate form based on current step
             function showCurrentForm() {
                 $('#businessInfoForm, #verificationForm, #completionForm').hide();
-                
                 if (currentStep === 1) {
                     $('#businessInfoForm').show();
                 } else if (currentStep === 2) {
@@ -964,7 +872,6 @@
                 } else if (currentStep === 3) {
                     $('#completionForm').show();
                 }
-                
                 updateSteps(currentStep);
             }
 
@@ -973,10 +880,6 @@
                 $('#summaryBusinessName').text(formData.business_name);
                 $('#summaryEmail').text(formData.email);
                 $('#summaryPhone').text(formData.phone);
-                
-                // Format address
-                const address = `${formData.address},${formData.address2}, ${$('#city_id option:selected').text()}, ${$('#state_id option:selected').text()} ${formData.pincode}`;
-                $('#summaryAddress').text(address);
             }
 
             // Clear validation errors
@@ -987,17 +890,13 @@
 
             // Display validation errors
             function displayValidationErrors(errors) {
-                // Clear previous errors
                 clearValidationErrors();
-                
-                // Display new errors
                 $.each(errors, function(field, messages) {
                     const inputField = $('#' + field);
                     if (inputField.length) {
                         inputField.addClass('is-invalid');
-                        
-                        // Add error message after the input group
-                        inputField.closest('.input-group').after('<div class="invalid-feedback">' + messages[0] + '</div>');
+                        inputField.closest('.input-group').after('<div class="invalid-feedback">' +
+                            messages[0] + '</div>');
                     }
                 });
             }
@@ -1016,16 +915,13 @@
             function startResendTimer(type) {
                 const timerElement = type === 'email' ? $('#emailResendTimer') : $('#phoneResendTimer');
                 const resendButton = type === 'email' ? $('#resendEmailOtp') : $('#resendPhoneOtp');
-                
                 let seconds = 60;
                 timerElement.text(`Resend in ${seconds}s`);
                 timerElement.show();
                 resendButton.addClass('disabled');
-                
                 const timer = setInterval(function() {
                     seconds--;
                     timerElement.text(`Resend in ${seconds}s`);
-                    
                     if (seconds <= 0) {
                         clearInterval(timer);
                         timerElement.hide();
@@ -1037,12 +933,9 @@
             // Check if both email and phone are verified
             function checkVerificationStatus() {
                 if (formData.isEmailVerified && formData.isPhoneVerified) {
-                    // Move to completion step
                     currentStep = 3;
                     updateSummary();
                     showCurrentForm();
-                    
-                    // Show success message
                     Swal.fire({
                         title: 'Verification Complete!',
                         text: 'Both your email and phone have been verified successfully.',
@@ -1053,17 +946,12 @@
                 }
             }
 
-            // Handle initial form submission to send OTP
+            // Handle initial form submission
             $('#initialForm').on('submit', function(e) {
                 e.preventDefault();
-                
-                // Clear previous validation errors
                 clearValidationErrors();
-                
-                // Get form data
                 const formValues = $(this).serialize();
-                
-                // Show loading
+
                 Swal.fire({
                     title: 'Sending Verification Codes...',
                     text: 'Please wait while we send verification codes to your email and phone',
@@ -1074,53 +962,45 @@
                         Swal.showLoading();
                     }
                 });
-                
-                // Send AJAX request to Laravel backend
+
                 $.ajax({
                     url: '/pre_register',
                     type: 'POST',
                     data: formValues,
                     success: function(response) {
-                        // Update form data
                         formData.business_name = $('#businessName').val();
                         formData.email = $('#email').val();
                         formData.phone = $('#phone').val();
-                        formData.address = $('#streetAddress').val();
-                        formData.address2 = $('#streetAddress2').val();
-                        formData.city_id = $('#city_id').val();
-                        formData.state_id = $('#state_id').val();
-                        formData.pincode = $('#postalCode').val();
                         formData.password = $('#password').val();
                         formData.password_confirmation = $('#password_confirmation').val();
-                        
-                        // Update verification form fields
+
                         $('#emailDisplay').text(formData.email);
                         $('#phoneDisplay').text(formData.phone);
                         $('#verificationEmail').val(formData.email);
                         $('#verificationPhone').val(formData.phone);
                         $('#finalEmail').val(formData.email);
                         $('#finalPhone').val(formData.phone);
-                        
-                        // Reset verification status
+
                         formData.isEmailVerified = false;
                         formData.isPhoneVerified = false;
-                        $('#emailVerificationStatus').html('<i class="bi bi-clock me-1"></i> Pending').removeClass('verification-success').addClass('verification-pending');
-                        $('#phoneVerificationStatus').html('<i class="bi bi-clock me-1"></i> Pending').removeClass('verification-success').addClass('verification-pending');
-                        
-                        // Move to verification step
+
+                        $('#emailVerificationStatus').html(
+                                '<i class="bi bi-clock me-1"></i> Pending')
+                            .removeClass('verification-success')
+                            .addClass('verification-pending');
+                        $('#phoneVerificationStatus').html(
+                                '<i class="bi bi-clock me-1"></i> Pending')
+                            .removeClass('verification-success')
+                            .addClass('verification-pending');
+
                         currentStep = 2;
                         showCurrentForm();
-                        
-                        // Start resend timers
                         startResendTimer('email');
                         startResendTimer('phone');
-                        
-                        // Show success message
+
                         Swal.fire({
                             title: 'Verification Codes Sent!',
-                            html: `We've sent verification codes to:<br>
-                                  <strong>Email:</strong> ${formData.email}<br>
-                                  <strong>Phone:</strong> ${formData.phone}`,
+                            html: `We've sent verification codes to:<br> <strong>Email:</strong> ${formData.email}<br> <strong>Phone:</strong> ${formData.phone}`,
                             icon: 'success',
                             confirmButtonText: 'OK',
                             confirmButtonColor: '#4361ee'
@@ -1128,13 +1008,8 @@
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
-                            // Validation errors
                             const errors = xhr.responseJSON.errors;
-                            
-                            // Display validation errors in the form
                             displayValidationErrors(errors);
-                            
-                            // Show validation errors in SweetAlert
                             Swal.fire({
                                 title: 'Validation Error',
                                 html: formatValidationErrorsForSwal(errors),
@@ -1143,10 +1018,10 @@
                                 confirmButtonColor: '#4361ee'
                             });
                         } else {
-                            // Other errors
                             Swal.fire({
                                 title: 'Error',
-                                text: xhr.responseJSON?.message || 'Something went wrong. Please try again.',
+                                text: xhr.responseJSON?.message ||
+                                    'Something went wrong. Please try again.',
                                 icon: 'error',
                                 confirmButtonText: 'OK',
                                 confirmButtonColor: '#4361ee'
@@ -1156,17 +1031,11 @@
                 });
             });
 
-            // Handle email OTP verification
+            // Email OTP verification
             $('#emailOtpForm').on('submit', function(e) {
                 e.preventDefault();
-                
-                // Clear previous validation errors
                 clearValidationErrors();
-                
-                // Get form data
                 const formValues = $(this).serialize();
-                
-                // Show loading
                 Swal.fire({
                     title: 'Verifying Email...',
                     text: 'Please wait while we verify your email',
@@ -1177,21 +1046,18 @@
                         Swal.showLoading();
                     }
                 });
-                
-                // Send AJAX request to Laravel backend
+
                 $.ajax({
                     url: '/seller/verify-otp',
                     type: 'POST',
                     data: formValues,
                     success: function(response) {
-                        // Update verification status
                         formData.isEmailVerified = true;
-                        $('#emailVerificationStatus').html('<i class="bi bi-check-circle me-1"></i> Verified').removeClass('verification-pending').addClass('verification-success');
-                        
-                        // Check if both email and phone are verified
+                        $('#emailVerificationStatus').html(
+                                '<i class="bi bi-check-circle me-1"></i> Verified')
+                            .removeClass('verification-pending')
+                            .addClass('verification-success');
                         checkVerificationStatus();
-                        
-                        // Show success message
                         Swal.fire({
                             title: 'Email Verified!',
                             text: 'Your email has been verified successfully',
@@ -1202,15 +1068,11 @@
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
-                            // Validation errors
                             const errors = xhr.responseJSON.errors;
-                            
-                            // Display validation errors in the form
                             const otpField = $('#emailOtp');
                             otpField.addClass('is-invalid');
-                            otpField.after('<div class="invalid-feedback">' + errors.otp[0] + '</div>');
-                            
-                            // Show validation errors in SweetAlert
+                            otpField.after('<div class="invalid-feedback">' + errors.otp[0] +
+                                '</div>');
                             Swal.fire({
                                 title: 'Invalid Code',
                                 text: errors.otp[0],
@@ -1219,10 +1081,10 @@
                                 confirmButtonColor: '#4361ee'
                             });
                         } else {
-                            // Other errors
                             Swal.fire({
                                 title: 'Verification Failed',
-                                text: xhr.responseJSON?.message || 'The verification code is invalid or has expired.',
+                                text: xhr.responseJSON?.message ||
+                                    'The verification code is invalid or has expired.',
                                 icon: 'error',
                                 confirmButtonText: 'Try Again',
                                 confirmButtonColor: '#4361ee'
@@ -1232,17 +1094,11 @@
                 });
             });
 
-            // Handle phone OTP verification
+            // Phone OTP verification
             $('#phoneOtpForm').on('submit', function(e) {
                 e.preventDefault();
-                
-                // Clear previous validation errors
                 clearValidationErrors();
-                
-                // Get form data
                 const formValues = $(this).serialize();
-                
-                // Show loading
                 Swal.fire({
                     title: 'Verifying Phone...',
                     text: 'Please wait while we verify your phone number',
@@ -1253,21 +1109,18 @@
                         Swal.showLoading();
                     }
                 });
-                
-                // Send AJAX request to Laravel backend
+
                 $.ajax({
                     url: '/seller/verify-otp',
                     type: 'POST',
                     data: formValues,
                     success: function(response) {
-                        // Update verification status
                         formData.isPhoneVerified = true;
-                        $('#phoneVerificationStatus').html('<i class="bi bi-check-circle me-1"></i> Verified').removeClass('verification-pending').addClass('verification-success');
-                        
-                        // Check if both email and phone are verified
+                        $('#phoneVerificationStatus').html(
+                                '<i class="bi bi-check-circle me-1"></i> Verified')
+                            .removeClass('verification-pending')
+                            .addClass('verification-success');
                         checkVerificationStatus();
-                        
-                        // Show success message
                         Swal.fire({
                             title: 'Phone Verified!',
                             text: 'Your phone number has been verified successfully',
@@ -1278,15 +1131,11 @@
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
-                            // Validation errors
                             const errors = xhr.responseJSON.errors;
-                            
-                            // Display validation errors in the form
                             const otpField = $('#phoneOtp');
                             otpField.addClass('is-invalid');
-                            otpField.after('<div class="invalid-feedback">' + errors.otp[0] + '</div>');
-                            
-                            // Show validation errors in SweetAlert
+                            otpField.after('<div class="invalid-feedback">' + errors.otp[0] +
+                                '</div>');
                             Swal.fire({
                                 title: 'Invalid Code',
                                 text: errors.otp[0],
@@ -1295,10 +1144,10 @@
                                 confirmButtonColor: '#4361ee'
                             });
                         } else {
-                            // Other errors
                             Swal.fire({
                                 title: 'Verification Failed',
-                                text: xhr.responseJSON?.message || 'The verification code is invalid or has expired.',
+                                text: xhr.responseJSON?.message ||
+                                    'The verification code is invalid or has expired.',
                                 icon: 'error',
                                 confirmButtonText: 'Try Again',
                                 confirmButtonColor: '#4361ee'
@@ -1308,15 +1157,12 @@
                 });
             });
 
-            // Handle resend email OTP
+            // Resend email OTP
             $('#resendEmailOtp').on('click', function(e) {
                 e.preventDefault();
-                
                 if ($(this).hasClass('disabled')) {
                     return;
                 }
-                
-                // Show loading
                 Swal.fire({
                     title: 'Resending Email Code...',
                     text: 'Please wait while we send a new verification code to your email',
@@ -1327,8 +1173,7 @@
                         Swal.showLoading();
                     }
                 });
-                
-                // Send AJAX request to Laravel backend
+
                 $.ajax({
                     url: '/seller/resend-otp',
                     type: 'POST',
@@ -1337,10 +1182,7 @@
                         email: formData.email
                     },
                     success: function(response) {
-                        // Start resend timer
                         startResendTimer('email');
-                        
-                        // Show success message
                         Swal.fire({
                             title: 'Code Resent!',
                             text: `We've sent a new verification code to ${formData.email}`,
@@ -1352,7 +1194,8 @@
                     error: function(xhr) {
                         Swal.fire({
                             title: 'Error',
-                            text: xhr.responseJSON?.message || 'Failed to resend verification code. Please try again.',
+                            text: xhr.responseJSON?.message ||
+                                'Failed to resend verification code. Please try again.',
                             icon: 'error',
                             confirmButtonText: 'OK',
                             confirmButtonColor: '#4361ee'
@@ -1361,15 +1204,12 @@
                 });
             });
 
-            // Handle resend phone OTP
+            // Resend phone OTP
             $('#resendPhoneOtp').on('click', function(e) {
                 e.preventDefault();
-                
                 if ($(this).hasClass('disabled')) {
                     return;
                 }
-                
-                // Show loading
                 Swal.fire({
                     title: 'Resending SMS Code...',
                     text: 'Please wait while we send a new verification code to your phone',
@@ -1380,8 +1220,7 @@
                         Swal.showLoading();
                     }
                 });
-                
-                // Send AJAX request to Laravel backend
+
                 $.ajax({
                     url: '/seller/resend-otp',
                     type: 'POST',
@@ -1390,10 +1229,7 @@
                         phone: formData.phone
                     },
                     success: function(response) {
-                        // Start resend timer
                         startResendTimer('phone');
-                        
-                        // Show success message
                         Swal.fire({
                             title: 'Code Resent!',
                             text: `We've sent a new verification code to ${formData.phone}`,
@@ -1405,7 +1241,8 @@
                     error: function(xhr) {
                         Swal.fire({
                             title: 'Error',
-                            text: xhr.responseJSON?.message || 'Failed to resend verification code. Please try again.',
+                            text: xhr.responseJSON?.message ||
+                                'Failed to resend verification code. Please try again.',
                             icon: 'error',
                             confirmButtonText: 'OK',
                             confirmButtonColor: '#4361ee'
@@ -1414,11 +1251,9 @@
                 });
             });
 
-            // Handle final form submission
+            // Final form submission
             $('#registrationForm').on('submit', function(e) {
                 e.preventDefault();
-                
-                // Show loading alert
                 Swal.fire({
                     title: 'Processing Application...',
                     text: 'Please wait while we complete your registration',
@@ -1429,41 +1264,39 @@
                         Swal.showLoading();
                     }
                 });
-                
-                // Send AJAX request to Laravel backend
+
                 $.ajax({
                     url: '/seller/complete-registration',
                     type: 'POST',
                     data: $(this).serialize(),
                     success: function(response) {
-                        console.log('git rep',response)
-                    if(response['success']){
-                        Swal.fire({
-                            title: 'Welcome Aboard!',
-                            text: 'Your seller account has been created successfully',
-                            icon: 'success',
-                            confirmButtonText: 'Login to  Seller Dashboard',
-                            confirmButtonColor: '#4361ee'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                // Redirect to seller dashboard
-                                window.location.href = '/login';
-                            }
-                        });
-                    }else{
-                         Swal.fire({
-                            title: 'Form Errors',
-                            text: response['message'],
-                            icon: 'error',
-                            confirmButtonText: 'Try Again',
-                            confirmButtonColor: '#4361ee'
-                        });
-                    }
+                        if (response['success']) {
+                            Swal.fire({
+                                title: 'Welcome Aboard!',
+                                text: 'Your seller account has been created successfully',
+                                icon: 'success',
+                                confirmButtonText: 'Login to Seller Dashboard',
+                                confirmButtonColor: '#4361ee'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = '/login';
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Form Errors',
+                                text: response['message'],
+                                icon: 'error',
+                                confirmButtonText: 'Try Again',
+                                confirmButtonColor: '#4361ee'
+                            });
+                        }
                     },
                     error: function(xhr) {
                         Swal.fire({
                             title: 'Registration Failed',
-                            text: xhr.responseJSON?.message || 'We couldn\'t complete your registration at this time',
+                            text: xhr.responseJSON?.message ||
+                                'We couldn\'t complete your registration at this time',
                             icon: 'error',
                             confirmButtonText: 'Try Again',
                             confirmButtonColor: '#4361ee'
@@ -1472,7 +1305,7 @@
                 });
             });
 
-            // Handle back button in verification form
+            // Handle back button
             $('#backToBusinessInfo').on('click', function() {
                 currentStep = 1;
                 showCurrentForm();
@@ -1490,6 +1323,7 @@
             showCurrentForm();
         });
     </script>
+
 </body>
 
 </html>

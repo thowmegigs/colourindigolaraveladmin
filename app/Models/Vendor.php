@@ -61,5 +61,8 @@ class Vendor  extends Authenticatable
     }
 
    
-  
+     public function vendor_bank()
+    {
+      return $this->HasOne(VendorBank::class,'vendor_id','id');
+    }
 }

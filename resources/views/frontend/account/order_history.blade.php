@@ -18,9 +18,9 @@
                         <div class="py-6 p-md-6 p-lg-10">
                             <!-- heading -->
                             <h2 class="mb-6">My Orders</h2>
-                            @foreach ($orders as $t)
+                         {{--   @foreach ($orders as $t)
                             <x-frontend.order_items_modal :order="$t" />
-                            @endforeach
+                            @endforeach--}}
                             <div class="table-responsive-xxl border-0">
                                 <!-- Table -->
                                 <table class="table mb-0 text-nowrap table-centered">

@@ -127,7 +127,7 @@ class OrderController extends Controller
     public function commonVars($model = null)
     {
         $settings = \DB::table('settings')->first();
-        $order_status_list = $settings->order_tags ? array_column(json_decode($settings->order_tags, true), 'name') : [];
+        $order_status_list = [];
 
         $repeating_group_inputs = [
             [
@@ -207,14 +207,7 @@ class OrderController extends Controller
         $toggable_group = [];
 
         $table_columns = [
-            [
-                'column' => 'total_amount',
-                'label' => 'Total Amount',
-                'sortable' => 'Yes',
-                'show_json_button_click' => false,
-                'by_json_key' => 'id',
-                'inline_images' => true,
-            ],
+            
             [
                 'column' => 'net_payable',
                 'label' => 'Total Paid',
@@ -369,10 +362,7 @@ class OrderController extends Controller
                 'name' => 'uuid',
                 'label' => 'Order No',
             ],
-            [
-                'name' => 'cart_session_id',
-                'label' => 'Cart Session ',
-            ],
+           
         ];
         $filterable_fields = [
             [
@@ -508,7 +498,7 @@ class OrderController extends Controller
         ],*/
         ];
         $settings = \DB::table('settings')->first();
-        $order_status_list = $settings->order_tags ? array_column(json_decode($settings->order_tags, true), 'name') : [];
+        $order_status_list = [];
         $common_data = $this->commonVars()['data'];
         if ($request->ajax()) {
             $sort_by = $request->get('sortby');
@@ -542,7 +532,7 @@ class OrderController extends Controller
 
             $list = $db_query->latest()->paginate($this->pagination_count);
 
-            $order_status_list = $settings->order_tags ? array_column(json_decode($settings->order_tags, true), 'name') : [];
+            $order_status_list = [];
             $data = array_merge($common_data, [
 
                 'list' => $list,
@@ -550,9 +540,7 @@ class OrderController extends Controller
                 'sort_type' => $sort_type,
               
                 'bulk_update' => json_encode([
-                    'delivery_status' => ['label' => 'Delivery Status',
-                        'data' => !empty($order_status_list) ? getListFromIndexArray($order_status_list) : getListFromIndexArray(['Order Placed', 'Out For Delivery', 'Delivered', 'Cancelled', 'Returned', 'Partially Returned'])],
-                    
+                     
                     'paid_status' => ['label' => 'Payment Status', 'data' => getListFromIndexArray(['Paid'])],
                     'order_ship_status' => ['label' => 'Transfer To Shiprocket', 'data' => getListFromIndexArray(['Yes','No'])],
                 ]),
@@ -576,9 +564,7 @@ class OrderController extends Controller
                 'list' => $list,
                 'tabs' => $tabs,
                 'bulk_update' => json_encode([
-                    'delivery_status' => ['label' => 'Delivery Status',
-                        'data' => !empty($order_status_list) ? getListFromIndexArray($order_status_list) : getListFromIndexArray(['Order Placed', 'Out For Delivery', 'Delivered', 'Cancelled', 'Returned', 'Partially Returned'])],
-                   
+                     
                     'order_ship_status' => ['label' => 'Transfer To Shiprocket', 'data' => getListFromIndexArray(['Yes','No'])],
 
                     'paid_status' => ['label' => 'Payment Status', 'data' => getListFromIndexArray(['Order Placed', 'Paid',])],

@@ -87,13 +87,13 @@ $(document).on("click", ".sorting", function () {
         $(this).data("sorting_type", "desc");
         reverse_order = "desc";
         //  == clear_icon();
-        $("#" + column_name + "_icon").html('<i class="fa fa-angle-down"></i>');
+        $("#" + column_name + "_icon").html('<i class="fa fa-angle-down"></i> <i class="bi bi-arrow-down"></i>');
     }
     if (order_type == "desc") {
         $(this).data("sorting_type", "asc");
         reverse_order = "asc";
         // clear_icon
-        $("#" + column_name + "_icon").html('<i class="fa fa-angle-up"></i>');
+        $("#" + column_name + "_icon").html('<i class="fa fa-angle-up"></i><i class="bi bi-arrow-up"></i>');
     }
     $("#hidden_column_name").val(column_name);
     $("#hidden_sort_type").val(reverse_order);

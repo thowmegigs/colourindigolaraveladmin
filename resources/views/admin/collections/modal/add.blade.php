@@ -8,7 +8,7 @@
                     <div class="card-body">
                         <div class="card-text">
                              <div class="col-md-12 mb-4">
-                                <label class="form-label" for="product-title-input">Category <span class="text-danger">*</span></label>
+                                <label class="form-label" for="product-title-input">Category</label>
                 
                                 <select id="category_ids" class="form-select" multiple  name="category_id[]"
                                      onChange="showProductsonMultiCategorySelect()">

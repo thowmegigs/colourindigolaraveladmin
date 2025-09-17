@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
 use DB;
+use \Carbon\Carbon;
+use \App\Models\VendorOrder;
+use \App\Models\Order;
+use \App\Models\OrderItem;
 class DashboardController extends Controller
 {
     public function index()
@@ -79,11 +83,11 @@ class DashboardController extends Controller
 
         ];
     $data['latest_pending_orders'] = \DB::table('orders')->where('delivery_status','Ordered')->limit(5)->latest()->get();
-     $data['latest_paid_orders'] = \DB::table('orders')->where('paid_status','Paid')->limit(5)->latest()->get();
-
+    $data['latest_paid_orders'] = \DB::table('orders')->where('paid_status','Paid')->limit(5)->latest()->get();
+     return view('admin.dashboard', with($data));
     }else{
-       $vendorId=auth()->guard('vendor')->id();
-      $earnings = \App\Models\VendorOrder::where('vendor_id', $vendorId)
+    $vendorId=auth()->guard('vendor')->id();
+    $earnings = \App\Models\VendorOrder::where('vendor_id', $vendorId)
                     ->whereHas('shipping_status_updates', function ($query) {
                         $query->where('shipping_status', 'Delivered');
                     })
@@ -95,7 +99,7 @@ class DashboardController extends Controller
                     })
                     ->select(\DB::raw('SUM(vendor_total - (commission_total + refunded_amount)) as total_profit'))
                     ->value('total_profit');
-;
+
           $data['widgets'] = [
           
             [
@@ -155,11 +159,47 @@ class DashboardController extends Controller
         ];
          $data['latest_pending_orders'] = \DB::table('vendor_orders')->where('vendor_id',$vendorId)->where('delivery_status','Ordered')->limit(5)->latest()->get();
         $data['latest_paid_orders'] = \DB::table('vendor_orders')->where('vendor_id',$vendorId)->where('paid_status','Paid')->limit(5)->latest()->get();
+        $data['salesData'] = [500, 700, 800, 650, 900, 1100, 1000];
+        $data['months'] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
+        
+        $data['topProducts'] = DB::table('order_items')
+        ->join('orders', 'order_items.order_id', '=', 'orders.id')
+        ->join('vendor_orders', 'vendor_orders.order_id', '=', 'orders.id')
+        ->where('vendor_orders.vendor_id', $vendorId)
+        ->select('order_items.name', DB::raw('SUM(order_items.qty) as total_qty'))
+        ->groupBy('order_items.name')
+        ->orderByDesc('total_qty')
+        ->limit(5)
+        ->get();
+       
 
+    // 3️⃣ Sales overview (last 7 days revenue trend)
+    $data['salesOverview'] = VendorOrder::where('vendor_id', $vendorId)
+        ->where('paid_status', 'Paid')
+        ->whereBetween('created_at', [Carbon::now()->subDays(100), Carbon::now()])
+        ->select(
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('SUM(vendor_earnings) as total_sales')
+        ) 
+        ->groupBy('date')
+        ->orderBy('date')
+        ->get();
+
+    // 4️⃣ Monthly orders count (last 12 months)
+    $data['monthlyOrders'] = VendorOrder::where('vendor_id', $vendorId)
+        ->select(
+            DB::raw("DATE_FORMAT(created_at, '%b %Y') as month"),
+            DB::raw('COUNT(id) as total_orders')
+        )
+        ->groupBy('month')
+        ->orderBy(DB::raw("MIN(created_at)"))
+        ->get();
+
+        return view('vendor.dashboard', with($data));
  
     }
 
-         return view('admin.dashboard', with($data));
+       
     }
     public function dashboard_data(Request $r)
     {
@@ -209,13 +249,18 @@ class DashboardController extends Controller
     {
          $data['states']=getList('State');
         $data['me']=auth()->guard('vendor')->user();
-        $data['city_name']=\DB::table('city')->where('state_id',$data['me']->state_id)->first()->name;
-              $data['cities']=\DB::table('city')->where('state_id',$data['me']->state_id)->get();
+        $data['city_name']=$data['me']->state_id?\DB::table('city')->where('state_id',$data['me']->state_id)->first()->name:null;
+              $data['cities']=$data['me']->state_id?\DB::table('city')->where('state_id',$data['me']->state_id)->get():null;
 
-        return view('admin.profile_setting',with($data));
+        return view('vendor.profile_setting',with($data));
     }
-    /*
-public function buildFilter(Request $r, $query)
+      public function support(Request $r)
+    {
+         
+        return view('vendor.support');
+    }
+ 
+public function buildFilter(Request $r, $query,$except=[])
 {
 $get = $r->all();
 if (count($get) > 0 && $r->isMethod('get')) {
@@ -246,136 +291,521 @@ $query = $query->whereIn($key, $value);
 }
 return $query;
 }
+ 
+ public function customer_banks(Request $request)
+    {
+       
+         
+        $view_columns =[];
+         $table_columns = [
+            [
+                "column" => "user_id",
+                "label" => "Customer Name",
+                "sortable" => "Yes",
+            ],
+            [
+                "column" => "bank_name",
+                "label" => "Bank Name",
+                "sortable" => "Yes",
+            ],
 
-public function company_ledger(Request $request)
-{
-$table_columns = [
-[
-'column' => 'name',
-'label' => 'Title',
-'sortable' => 'Yes',
-],
-[
-'column' => 'amount',
-'label' => 'Amount',
-'sortable' => 'Yes',
-],
-[
-'column' => 'mode',
-'label' => 'Income/Expense',
-'sortable' => 'Yes',
-],
-[
-'column' => 'created_at',
-'label' => 'Date',
-'sortable' => 'Yes',
-],
+            [
+                "column" => "account_number",
+                "label" => "Account Number",
+                "sortable" => "Yes",
+            ],
+            [
+                "column" => "account_holder",
+                "label" => "Account Holder",
+                "sortable" => "Yes",
+            ],
+            [
+                "column" => "ifsc",
+                "label" => "IFSC Code",
+                "sortable" => "Yes",
+            ],
+            [
+                "column" => "upi_id",
+                "label" => "UPI Id",
+                "sortable" => "Yes",
+            ],
+            [
+                "column" => "qr_image",
+                "label" => "QR Code",
+                "sortable" => "Yes",
+            ],
 
-];
-$filterable_fields = [
-[
-'name' => 'created_at',
-'label' => 'Created At',
-'type' => 'date',
-],
-[
-'name' => 'mode',
-'label' => 'Expense/Income',
-'type' => 'select',
-'options'=>getListFromIndexArray(['Income','Spent'])
-],
-];
-$searchable_fields = [
-[
-'name' => 'name',
-'label' => 'Title',
-'type' => 'text',
-],
-];
-$this->pagination_count = 100;
-if ($request->ajax()) {
-$sort_by = $request->get('sortby');
-$sort_type = $request->get('sorttype');
-$search_by = $request->get('search_by');
+            [
+                "column" => "created_at",
+                "label" => "Create Date",
+                "sortable" => "Yes",
+            ],
+        ];
+        $filterable_fields = [
+            [
+                "name" => "user_id",
+                "label" => "Select Customer",
+                "type" => "select",
+                'options'=>getListWithRoles('Customer')
 
-$query = $request->get('query');
+            ],
+            [
+                "name" => "created_at",
+                "label" => "Created At",
+                "type" => "date",
+            ],
+         
+        ];
+        $searchable_fields = [
+             [
+                "name" => "bank_name",
+                "label" => "Bank Name",
+                "type" => "text",
+            ],
 
-$search_val = str_replace(" ", "%", $query);
-if (empty($search_by)) {
-$search_by = 'name';
-}
+            [
+                "name" => "account_number",
+                "label" => "Account Number",
+                "type" => "text",
+            ],
+            [
+                "name" => "ifsc",
+                "label" => "IFSC Code",
+                 "type" => "text",
+            ],
+            [
+                "name" => "branch_name",
+                "label" => "Branch Name",
+                 "type" => "text",
+            ],
+        ];
+        $model_relations = [
+            [
+                "name" => "user",
+                "type" => "BelongsTo",
+                "save_by_key" => "",
+                "column_to_show_in_view" => "name",
+            ],
+        ];
+        $this->pagination_count = 100;
+        if ($request->ajax()) {
+            $sort_by = $request->get("sortby");
+            $sort_type = $request->get("sorttype");
+            $search_by = $request->get("search_by");
 
-$list = \App\Models\CompanyLedger::when(!empty($search_val), function ($query) use ($search_val, $search_by) {
-return $query->where($search_by, 'like', '%' . $search_val . '%');
-})
-->when(!empty($sort_by), function ($query) use ($sort_by, $sort_type) {
-return $query->orderBy($sort_by, $sort_type);
-})->latest()->paginate($this->pagination_count);
-$data = [
-'table_columns'=> $table_columns,
-'list'=>$list,
-'sort_by'=> $sort_by,
-'sort_type'=> $sort_type,
-'storage_folder'=>'',
-'plural_lowercase'=>'company_ledger',
-'module'=>'ComapnyLedger',
-'has_image'=>0,
-'model_relations'=>[],
-'image_field_names'=>[],
+            $query = $request->get("query");
 
-];
-return view('admin.company_ledger_page', with($data));
-} else {
+            $search_val = str_replace(" ", "%", $query);
+            if (empty($search_by)) {
+                $search_by = "name";
+            }
+           
+            $list = \App\Models\CustomerBank::with("user:id,name")
+                ->when(!empty($search_val), function ($query) use (
+                    $search_val,
+                    $search_by
+                ) {
+                    return $query->where(
+                        $search_by,
+                        "like",
+                        "%" . $search_val . "%"
+                    );
+                })
+               
+                ->when(!empty($sort_by), function ($query) use (
+                    $sort_by,
+                    $sort_type
+                ) {
+                    return $query->orderBy($sort_by, $sort_type);
+                })
+                ->latest()
+                ->paginate($this->pagination_count);
+               
+            $data = [
+                "table_columns" => $table_columns,
+                "list" => $list,
+                "searchable_fields" => $searchable_fields,
+                "filterable_fields" => $filterable_fields,
+                "plural_lowercase" => "customer_banks",
+                "sort_by" => $sort_by,
+                "sort_type" => $sort_type,
+                "storage_folder" => "",
+                "plural_lowercase" => "customer_banks",
+                "module" => "CustomerBank",
+                "has_image" => 0,
+                "model_relations" => [],
+                "image_field_names" => [],
+                "crud_title" => "Customer Bank",
+                "has_popup" => false,
+                "show_crud_in_modal" => false,
+                "bulk_update" => "",
+            ];
+            return view("admin.customer_banks.page",with($data));
+        } else {
+            $query = null;
 
-$query = null;
+            $query = \App\Models\CustomerBank::with("user:id,name");
 
-$query = \App\Models\CompanyLedger::query();
+            $query = $this->buildFilter($request, $query);
+            $list = $query->latest()->paginate($this->pagination_count);
 
-$query = $this->buildFilter($request, $query);
-$list = $query->latest()->paginate($this->pagination_count);
+            $view_data = [
+                "list" => $list,
 
-$view_data = [
-'list' => $list,
+                "title" => "Customer Bank",
+                "searchable_fields" => $searchable_fields,
+                "filterable_fields" => $filterable_fields,
+                "plural_lowercase" => "customer_banks",
+                "table_columns" => $table_columns,
+                "module_table_name" => "customer_banks",
 
-'title' => 'Company Ledger',
-'searchable_fields' => $searchable_fields,
-'filterable_fields' => $filterable_fields,
+                "model_relations" => $model_relations,
+                "module" => "CustomerBank",
+                "crud_title" => "Customer Bank ",
+                "has_popup" => false,
+                "show_crud_in_modal" => false,
+                "bulk_update" => "",
+            ];
+            return view("admin.vendor_banks.index", $view_data);
+        }
+    }
 
-'table_columns' => $table_columns,
+ public function vendor_settlements(Request $request)
+    {
+       
+         
+        $view_columns =[];
+         $table_columns = [
+            [
+                "column" => "vendor_id",
+                "label" => "Vendor Name",
+                "sortable" => "Yes",
+            ],
+            [
+                "column" => "amount",
+                "label" => "Amount",
+                "sortable" => "Yes",
+            ],
 
-];
-return view('admin.company_ledger', $view_data);
-}
+            [
+                "column" => "paid_status",
+                "label" => "Paid Status",
+                "sortable" => "Yes",
+            ],
+           
 
-}
-public function exportLedger(Request $request, $type)
-{
-$filter = [];
-$filter_date = [];
-$date_field = null;
-foreach ($_GET as $key => $val) {
-if(!empty($val)){
-if (str_contains($key, 'start_')) {
-$date_field = str_replace('start_', '', $key);
-$filter_date['min'] = $val;
-} else if (str_contains($key, 'end_')) {
-$date_field = str_replace('end_', '', $key);
-$filter_date['max'] = $val;
-} else {
-$filter[$key] = $val;
-}
-}
+            [
+                "column" => "updated_at",
+                "label" => "Last  Updated Date",
+                "sortable" => "Yes",
+            ],
+        ];
+        $filterable_fields = [
+            [
+                "name" => "created_at",
+                "label" => "Created At",
+                "type" => "date",
+            ],
+            [
+                "name" => "paid_status",
+                "label" => "Paid Status",
+                "type" => "select",
+                'options'=>getListFromIndexArray(['Pending','Paid'])
+            ],
+            [
+                "name" => "vendor_id",
+                "label" => "Vendor",
+                "type" => "select",
+                'options'=>getList('Vendor')
+            ],
+         
+        ];
+        $searchable_fields = [
+            
 
-}
-if ($type == 'excel') {
-return Excel::download(new \App\Exports\LedgerExport([], $filter, $filter_date, $date_field), 'ledger_report' . date("Y-m-d H:i:s") . '.xlsx', \Maatwebsite\Excel\Excel::XLSX);
-}
+          
+        ];
+        $model_relations = [
+            [
+                "name" => "vendor",
+                "type" => "BelongsTo",
+                "save_by_key" => "",
+                "column_to_show_in_view" => "name",
+            ],
+        ];
+        $this->pagination_count = 100;
+        if ($request->ajax()) {
+            $sort_by = $request->get("sortby");
+            $sort_type = $request->get("sorttype");
+            $search_by = $request->get("search_by");
 
-if ($type == 'csv') {
-return Excel::download(new \App\Exports\LedgerExport([], $filter, $filter_date, $date_field), 'ledger_report' . date("Y-m-d H:i:s") . '.csv', \Maatwebsite\Excel\Excel::CSV);
-}
+            $query = $request->get("query");
 
-}
- */
+            $search_val = str_replace(" ", "%", $query);
+            if (empty($search_by)) {
+                $search_by = "name";
+            }
+           
+            $list = \App\Models\VendorSettlement::with("vendor:id,name")
+                ->when(!empty($search_val), function ($query) use (
+                    $search_val,
+                    $search_by
+                ) {
+                    return $query->where(
+                        $search_by,
+                        "like",
+                        "%" . $search_val . "%"
+                    );
+                })
+               
+                ->when(!empty($sort_by), function ($query) use (
+                    $sort_by,
+                    $sort_type
+                ) {
+                    return $query->orderBy($sort_by, $sort_type);
+                })
+                ->latest()
+                ->paginate($this->pagination_count);
+               
+            $data = [
+                "table_columns" => $table_columns,
+                "list" => $list,
+                "searchable_fields" => $searchable_fields,
+                "filterable_fields" => $filterable_fields,
+                "plural_lowercase" => "vendor_settlements",
+                "sort_by" => $sort_by,
+                "sort_type" => $sort_type,
+                "storage_folder" => "",
+                "plural_lowercase" => "vendor_settlements",
+                "module" => "VendorSettlement",
+                "has_image" => 0,
+                "model_relations" => [],
+                "image_field_names" => [],
+                "crud_title" => "Vendor Settlement",
+                "has_popup" => false,
+                "show_crud_in_modal" => false,
+                 "bulk_update" => json_encode([
+                    "paid_status" => [
+                        "label" => "Set Paid",
+                        "data" => getListFromIndexArray(["Paid", "Pending"]),
+                    ],
+                ]),
+            ];
+            return view("admin.vendor_settlements.page",with($data));
+        } else {
+            $query = null;
 
+            $query = \App\Models\VendorSettlement::with(
+                "vendor:id,name"
+            );
+
+            $query = $this->buildFilter($request, $query);
+            $list = $query->latest()->paginate($this->pagination_count);
+
+            $view_data = [
+                "list" => $list,
+
+                "title" => "Vendor Settlement",
+                "searchable_fields" => $searchable_fields,
+                "filterable_fields" => $filterable_fields,
+                "plural_lowercase" => "vendor_settlements",
+                "table_columns" => $table_columns,
+                "module_table_name" => "vendor_settlements",
+
+                "model_relations" => $model_relations,
+                "module" => "VendorSettlement",
+                "crud_title" => "Vendor Settlement ",
+                "has_popup" => false,
+                "show_crud_in_modal" => false,
+                "bulk_update" => json_encode([
+                    "paid_status" => [
+                        "label" => "Set Paid",
+                        "data" => getListFromIndexArray(["Paid", "Pending"]),
+                    ],
+                ]),
+            ];
+            return view("admin.vendor_settlements.index", $view_data);
+        }
+    }
+
+      public function completed_orders(Request $request)
+    {
+       
+
+        $view_columns = [
+           
+        ];
+        $table_columns = [
+            [
+                "column" => "vendor_id",
+                "label" => "Seller Name",
+                "sortable" => "Yes",
+            ],
+            [
+                "column" => "order_id",
+                "label" => "Order Id",
+                "sortable" => "Yes",
+            ],
+
+            [
+                "column" => "vendor_total",
+                "label" => "Total Order Amount(Rs.)",
+                "sortable" => "Yes",
+            ],
+            [
+                "column" => "net_profit",
+                "label" => "Earning(Rs.)",
+                "sortable" => "Yes",
+            ],
+            [
+                "column" => "paid_status",
+                "label" => "Paid Status",
+                "sortable" => "Yes",
+            ],
+            [
+                "column" => "delivery_status",
+                "label" => "Order Status",
+                "sortable" => "Yes",
+            ],
+            [
+                "column" => "is_settled",
+                "label" => "Settle Status",
+                "sortable" => "Yes",
+            ],
+           
+        ];
+        $filterable_fields = [
+            [
+                "name" => "created_at",
+                "label" => "Created At",
+                "type" => "date",
+            ],
+            [
+                'name' => 'is_settled',
+                'label' => 'Settled Status ',
+                'type' => 'select',
+                'options' => getListFromIndexArray(['Pending','Settled']),
+            ],
+        ];
+        $searchable_fields = [
+            [
+                "name" => "order_id",
+                "label" => "Order Id",
+                "type" => "text",
+            ],
+           
+        ];
+        $model_relations = [
+            [
+                "name" => "vendor",
+                "type" => "BelongsTo",
+                "save_by_key" => "",
+                "column_to_show_in_view" => "name",
+            ],
+            [
+                'name' => 'order',
+                'type' => 'BelongsTo',
+                'save_by_key' => '',
+                'column_to_show_in_view' => 'name'
+            ],
+        ];
+        $this->pagination_count = 100;
+        if ($request->ajax()) {
+            $sort_by = $request->get("sortby");
+            $sort_type = $request->get("sorttype");
+            $search_by = $request->get("search_by");
+
+            $query = $request->get("query");
+
+            $search_val = str_replace(" ", "%", $query);
+            if (empty($search_by)) {
+                $search_by = "name";
+            }
+            if ($search_by == "order_id") {
+                $order = \DB::table("orders")
+                    ->where("uuid", $search_val)
+                    ->first();
+                $search_val = $order ? $order->id : $search_val;
+            }
+            $list = \App\Models\VendorOrder::with(array_column($model_relations, 'name'))->when(
+                !empty($search_val),
+                function ($query) use ($search_val, $search_by) {
+                    return $query->where(
+                        $search_by,
+                        "like",
+                        "%" . $search_val . "%"
+                    );
+                }
+            )
+              
+                ->when(!empty($sort_by), function ($query) use (
+                    $sort_by,
+                    $sort_type
+                ) {
+                    return $query->orderBy($sort_by, $sort_type);
+                })
+                ->where("status", "Success")
+                // ->where("is_completed", "Yes")
+                ->latest()
+                ->paginate($this->pagination_count);
+            $data = [
+                "table_columns" => $table_columns,
+                "list" => $list,
+                "searchable_fields" => $searchable_fields,
+                "filterable_fields" => $filterable_fields,
+                "plural_lowercase" => "vendor_order",
+                "sort_by" => $sort_by,
+                "sort_type" => $sort_type,
+                "storage_folder" => "",
+                "plural_lowercase" => "vendor_order",
+                "module" => "VendorOrder",
+                "has_image" => 0,
+                "model_relations" => [],
+                "image_field_names" => [],
+                "crud_title" => "Vendor Order",
+                "has_popup" => false,
+                "show_crud_in_modal" => false,
+                "bulk_update" => json_encode([
+                    "is_settled" => [
+                        "label" => "Settle Order",
+                        "data" => getListFromIndexArray(["Yes", "No"]),
+                    ],
+                ]),
+            ];
+            return view("admin.orders.page", with($data));
+        } else {
+            $query = null;
+
+            $query = \App\Models\VendorOrder::with(array_column($model_relations, 'name'))->where("status", "Success");
+            // ->where("is_completed", "Yes");
+
+            $query = $this->buildFilter($request, $query);
+            $list = $query->latest()->paginate($this->pagination_count);
+
+            $view_data = [
+                "list" => $list,
+
+                "title" => "Vendor Order",
+                "searchable_fields" => $searchable_fields,
+                "filterable_fields" => $filterable_fields,
+                "plural_lowercase" => "vendor_order",
+                "table_columns" => $table_columns,
+                "module_table_name" => "vendor_orders",
+
+                "model_relations" => $model_relations,
+                "module" => "VendorOrder",
+                "crud_title" => "Vendor Order",
+                "has_popup" => false,
+                "show_crud_in_modal" => false,
+                "bulk_update" => json_encode([
+                    "is_settled" => [
+                        "label" => "Settle Order",
+                        "data" => getListFromIndexArray(["Yes", "No"]),
+                    ],
+                ]),
+            ];
+           
+            return view("admin.orders.completed_orders", $view_data);
+        }
+    }
 }

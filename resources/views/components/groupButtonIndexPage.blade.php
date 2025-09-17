@@ -1,4 +1,4 @@
- @props(['filterableFields', 'pluralLowercase', 'bulkUpdate', 'moduleTableName'])
+ @props(['filterableFields', 'pluralLowercase', 'bulkUpdate', 'moduleTableName','whichButtonsToHideArray'=>[]])
  @php
      $filterable_fields = $filterableFields;
      $plural_lowercase = $pluralLowercase;
@@ -6,11 +6,11 @@
 
  @endphp
  <div class="d-flex flex-wrap justify-content-between " style="align-items: start;max-width:660px; ">
-     @if (!empty($bulk_update_columns))
+     @if (!empty($bulk_update_columns) && !in_array('bulk',$whichButtonsToHideArray))
          <div class="" id="bulk_update">
-             <button type="button" class="rounded-0 btn btn-outline-success me-1" data-bs-toggle="modal"
+             <button type="button" class="rounded-sm btn btn-outline-success me-1" data-bs-toggle="modal"
                  data-bs-target="#bulk_update_modal">
-                 <i class="bx bx-edit"></i>&nbsp;&nbsp;Bullk Update
+                 <i class="bi bi-pencil"></i>&nbsp;&nbsp;Bullk Update
              </button>
              <div id="bulk_update_modal" class="modal fade" role="dialog">
                  <div class="modal-dialog">
@@ -79,9 +79,9 @@
 
                              </div>
                              <div class="modal-footer">
-                                 <button type="button" class="btn btn-primary rounded-0"
+                                 <button type="button" class="btn btn-primary rounded-sm"
                                      onClick="multiSelectCheckBoxAction('{!! $moduleTableName !!}')">Submit</button>
-                                 <button type="button" class="btn btn-danger rounded-0"
+                                 <button type="button" class="btn btn-danger rounded-sm"
                                      data-bs-dismiss="modal">Close</button>
                              </div>
                          </div>
@@ -90,11 +90,15 @@
              </div>
          </div>
      @endif
+     @if(!in_array('trash',$whichButtonsToHideArray))
      <div id="bulk_delete" style="margin-right:5px;">
-         <button type="button" class="rounded-0 btn btn-outline-danger"
+         <button type="button" class="rounded-sm btn btn-outline-danger"
              onclick="bulkDelete('{!! $moduleTableName !!}')">
-             <i class="bx bx-trash"></i>&nbsp;&nbsp;Trash
+             <i class="bi bi-trash"></i>&nbsp;&nbsp;Trash
          </button>
      </div>
+     @endif
+    @if(!in_array('filter',$whichButtonsToHideArray))
      <x-filter :data="$filterable_fields" />
+     @endif
  </div>

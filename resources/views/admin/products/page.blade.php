@@ -108,7 +108,11 @@
                                         echo showArrayInColumn($tr, $l, $by_json_key);
                                     }
                                 } else {
-                                    echo \Str::limit($r->{$t},20);
+                                    if($t=='uuid'){
+                                        echo $r->{$t};
+                                    }
+                                    else
+                                    echo \Str::limit($r->{$t},50);
                                 }
                             } else {
                                 echo $r->{$t};

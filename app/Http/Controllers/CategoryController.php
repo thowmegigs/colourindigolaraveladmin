@@ -26,6 +26,10 @@ class CategoryController extends Controller
         $this->has_popup = 1;
         $this->has_detail_view = 0;
         $this->has_side_column_input_group = 0;
+        $this->dimensions = [
+                'tiny'  => 130,
+              
+                ];
         $this->form_image_field_name = [
             [
                 'field_name' => 'image',
@@ -378,6 +382,7 @@ $repeating_group_inputs=[];
             'has_detail_view' => $this->has_detail_view,
             'repeating_group_inputs' => $repeating_group_inputs,
             'toggable_group' => $toggable_group,
+             'thumbnailDimensions'=>$this->dimensions
         ];
 
         return $data;
@@ -665,6 +670,10 @@ $repeating_group_inputs=[];
                     if (\File::exists(public_path($file_path))) {
                         \File::delete(public_path($file_path));
                     }
+                    $file_path = 'storage/' . $this->storage_folder . '/thumbnail/tiny_' . $old_image;
+                    if (\File::exists(public_path($file_path))) {
+                        \File::delete(public_path($file_path));
+                    }
 
                 }
             }
@@ -678,7 +687,8 @@ $repeating_group_inputs=[];
 
                 }}
 
-            $category->update($post);
+         
+                $category->update($post);
             $this->afterCreateProcess($request, $post, $category);
             \DB::commit();
             return createResponse(true, $this->crud_title . ' updated successfully', $this->index_url);
@@ -755,75 +765,9 @@ $repeating_group_inputs=[];
 
         return $this->getImageListBase($id, $table, $parent_field_name, $htis->storage_folder);
     }
-    public function storeSingleFile($folder, $filerequest)
-    {
-        $folder = str_replace('\\', '/', $folder);
-        $filenameWithExt = $filerequest->getClientOriginalName();
-        $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
-        $extension = $filerequest->getClientOriginalExtension();
-        $filename = time();
-        $fileNameToStore = $filename . '.' . $extension;
-        //chmod(\Storage::path('public/categories'), 0755);
-        $destinationPath = public_path('\\storage\\' . $folder . '\\' . $fileNameToStore);
-        $destinationPath = str_replace('\\', '/', $destinationPath);
-        $img = Image::make($filerequest->getRealPath())->resize(300, 300, function ($constraint) {
-            $constraint->aspectRatio();
-            $constraint->upsize();
-        });
-        $img->orientate()->save($destinationPath, 100);
-        //  tinifyImage($destinationPath);
-        return $fileNameToStore;
-    }
-    public function afterCreateProcessBase($request, $post, $model, $meta_info)
-    {
-        /*Use this function even when saving only related
-        HasMny or many to many table from other contrller function like adding comments from single
-        post page using ajax,place this function there
-        or assigning vendror to porducts in case of many to many then in ajax call place there but column name shoul be in model_relations
-         */
-       
-         $seoFileNameWithoutExtension =null;
-        if($request->has('name')){
-            
-          $seoFileNameWithoutExtension=\Str::slug($request->input('name')) . '-' . time() ;
-        
-        }
-       if ($meta_info['has_image']) {
-            foreach ($meta_info['image_field_names'] as $item) {
-
-                $field_name = $item['field_name'];
-                $single = $item['single'];
-                $has_thumbnail = $item['has_thumbnail'];
-                if ($request->hasfile($field_name)) {
-
-                    $image_name = $this->upload1($request->file($field_name), $field_name,$seoFileNameWithoutExtension);
-                    if ($image_name) {
-                        $model->{$field_name} = $image_name;
-                        $model->save();
-                    }
-
-                }
-
-            }
-
-        }
-
-        return $post;
-    }
-    public function upload1($filerequest, $fieldname,$seoFileNameWithoutExtension)
-    {
-
-        $uploaded_filename = null;
-        $dim=[
-             'tiny' => ['width' => 200, 'height' => 150],
-       
-            ];
-        $uploaded_filename=storeSingleFileCustomDimension($dim,'categories', $filerequest, true,$seoFileNameWithoutExtension);
-
-        
-        return $uploaded_filename;
-
-    }
+   
+    
+    
     public function getCategoryProductFeature(Request $r)
     {
         if ($r->ajax()) {

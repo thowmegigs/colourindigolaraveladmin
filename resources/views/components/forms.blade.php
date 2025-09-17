@@ -87,10 +87,12 @@ usort($data, function ($x, $y) {
                    @elseif($r['type'] == 'file' && $r['name']=='header_image')
                         {!! Form::text($r['name'], $r['label'])->value($r['default'])->primary()->type($r['type'])->placeholder($r['placeholder'])->attrs(array_merge($attrs, ['class' => 'form-control'])) !!}
                         @if (!empty($r['default']))
-                            <div class="d-flex">
-                                <x-showImageInEdit :default="$r['default']" />
-                            </div>
-                        @endif
+                                        <div class="d-flex">
+                                            <x-showImageInEdit  :default="$r['default']" />
+                                        </div>
+                                        @else
+                                     
+                                    @endif
                       
                     @elseif ($r['type'] == 'radio' || $r['type'] == 'checkbox')
                         <p style="font-weight:450;font-size: 14px;">{{ $r['label'] }}</p>

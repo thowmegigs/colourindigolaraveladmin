@@ -13,18 +13,15 @@
                                     <input type="hidden" name="existing_ids[]" value="{{ $item->id ?? '' }}">
                                     <input type="file" name="images[]"
                                      class="form-control" >
-                                    <x-singleFile 
-                                    :fileName="$item->name"
-                                     modelName="VideoFile" 
-                                    folderName="videos" 
-                                    fieldName="name"
-                                    :rowid="$item->id"
-                                    />
+                                    <!-- <x-showImageInEdit :default="'videos/' . $item->video" /> -->
+                         <x-singleFile :fileName="$item->video" modelName="VideoFile" 
+                         folderName="videos" fieldName="video"
+                            :rowid="$item->id" />
                                 </div></div>
                                 <div class="col">
                                 <div class="mb-3">
                                     <label for="product" class="form-label">Products</label>
-                                    <select name="product_ids[]" class="form-select select2" >
+                                    <select name="product_id[]" class="form-select select2" >
                                             <option value="">Select Products</option>
                                         @foreach($products as $col)
                                         <option value="{{$col->id}}" @if($item->product_id && $item->product_id==$col->id) selected @endif>{{$col->name}}</option>
@@ -32,7 +29,7 @@
                                         </select>
                                 </div>
                                 </div>
-                                <button type="button" class="btn btn-icon btn-danger btn-sm remove-item position-absolute top-0 end-0 m-2 d-none"><i class="mdi mdi-minus"></i></button>
+                                <button type="button" class="btn btn-icon btn-danger btn-sm remove-item position-absolute top-0 end-0 m-2"><i class="mdi mdi-minus"></i></button>
                             </div>
                     
                     @endforeach

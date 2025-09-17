@@ -375,6 +375,7 @@ function getModuleWiseCallbacks(module) {
         }
     };
     let callbackError = function (error = "") {
+     
         $("#login_btn").html("Sign-In");
     };
     if (module == "Login") {

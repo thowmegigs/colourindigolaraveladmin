@@ -132,6 +132,7 @@ function toggleContentSections(value) {
     $('#category_id').closest('.col-md-6').hide();
     $('#inp-product_ids').closest('.col-md-6').hide();
     $('#inp-coupon_ids').closest('.col-md-6').hide();
+   // $('#inp-vidoe_id').closest('.col-md-6').hide();
     $('#inp-collection_ids').closest('.col-md-6').hide();
     $('#background_color').closest('.col-md-6').hide();
     $('#inp-banner_id').closest('.col-md-6').hide();
@@ -141,7 +142,7 @@ function toggleContentSections(value) {
     $('#inp-section_subtitle').closest('.col-md-6').hide();
     $('#inp-display-Horizontal').closest('.col-md-6').hide();
     $('#inp-no_of_items').closest('.col-md-6').hide();
-    $('#inp-header_image').closest('.col-md-6').hide();
+   // $('#inp-header_image').closest('.col-md-6').hide();
     $('#inp-slider_id').closest('.col-md-6').hide();
     $('#inp-website_slider_id').closest('.col-md-6').hide();
     $('#section_background_color').closest('.col-md-6').hide();
@@ -202,12 +203,10 @@ function toggleContentSections(value) {
         $('#inp-no_of_items').closest('.col-md-6').show();
     }
     else if (value == 'Video') {
-    $('#section_header_imge').closest('.col-md-6').show();
-
-        $('#inp-vidoe_id').closest('.col-md-6').show();
-
-        $('#inp-section_subtitle').closest('.col-md-6').show();
-        $('#inp-header_image').closest('.col-md-6').show();
+  
+    $('#inp-vidoe_id').closest('.col-md-6').show();
+    $('#inp-section_subtitle').closest('.col-md-6').show();
+    $('#inp-header_image').closest('.col-md-6').show();
 
     }
 }
@@ -475,7 +474,7 @@ function initialiseSortingOnTable() {
 
                         });
                         const table = $('#sortable-table').data('table');
-                        // Send the new order to the server via AJAX
+                       console.log('table',table)
                         $.ajax({
                             url: '/update_order_sequence',  // Laravel route to handle the update
                             type: 'POST',

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use \Illuminate\Http\Request;
-
+use DB;
 class ReturnItemsController extends Controller
 {
     public function __construct()
@@ -86,7 +86,7 @@ class ReturnItemsController extends Controller
 
     }
 
-    public function buildFilter(Request $r, $query)
+    public function buildFilter(Request $r, $query,$except=[])
     {
         $get = $r->all();
         if (count($get) > 0 && $r->isMethod('get')) {
@@ -311,6 +311,8 @@ class ReturnItemsController extends Controller
     }
     public function index(Request $request)
     {
+        
+         $is_vendor=current_role()=='Vendor'?true:false;
         $view_columns = [
            [
                 'column' => 'order_uid',
@@ -436,7 +438,7 @@ class ReturnItemsController extends Controller
                 $search_by = 'name';
             }
 
-            $list = \App\Models\ReturnItem::with(['return_shipment:id,is_transferred','order:id,uuid,created_at','order_item:id,product_id,variant_id,order_id,vendor_id','order_item.product:id,name.category_id','order_item.product,category:id,name','order_item.variant:id,name','exchange_variant:id,name'])->when(!empty($search_val), function ($query) use ($search_val, $search_by) {
+            $list = \App\Models\ReturnItem::with(['return_shipment:id,is_transferred','order:id,uuid,created_at','order_item:id,product_id,variant_id,order_id,vendor_id','order_item.product:id,name,category_id','order_item.product,category:id,name','order_item.variant:id,name','exchange_variant:id,name'])->when(!empty($search_val), function ($query) use ($search_val, $search_by) {
                 return $query->where($search_by, 'like', '%' . $search_val . '%');
             })
                 ->when(!empty($sort_by), function ($query) use ($sort_by, $sort_type) {
@@ -461,7 +463,7 @@ class ReturnItemsController extends Controller
                 'image_field_names' => [],
 
             ];
-            return view('admin.return_item.page', with($data));
+            return $is_vendor?view("vendor.return_orders.index", $view_data):view('admin.return_items.page', with($data));
         } else {
 
             $query = null;
@@ -497,15 +499,15 @@ class ReturnItemsController extends Controller
                 'crud_title' => 'Return Item',
 
             ];
-            return view('admin.return_items.index', $view_data);
+            return $is_vendor?view("vendor.return_orders.index", $view_data):view('admin.return_items.index', $view_data);
         }
     }
     public function update_return_status(Request $r){
     $status=$r->status;
     $reason=$r->reason;
-    $id=$r->id;
+    $id=$r->id;/**return item id  */
    
-     $rturn_item=\App\Models\ReturnItem::with(['order:id,uuid','order_item:id,vendor_id'])->first();
+     $rturn_item=\App\Models\ReturnItem::with(['order:id,uuid','order_item:id,vendor_id'])->where('id',$id)->first();
      $vendor_order_uuid=$rturn_item->order->uuid.'/'.$rturn_item->order_item->vendor_id;
     $related_vendor_order=\DB::table('vendor_orders')->where('uuid',$vendor_order_uuid)->first();
     $related_return_shipment=\DB::table('return_shipments')->where('vendor_order_id',$related_vendor_order->id)
@@ -514,10 +516,26 @@ class ReturnItemsController extends Controller
      if($status=='Approved' &&  $rturn_item->status!='Approved'){
            if(is_null($related_return_shipment)){
             $returnOrderId =now()->format('YmdHis') . rand(10, 99);
-            $id=\DB::table('return_shipments')->insertGetId(['vendor_id'=>$rturn_item->order_item->vendor_id,'uuid'=>$returnOrderId,'vendor_order_id'=>$related_vendor_order->id,'type'=>$rturn_item->type]);
-        
-            \DB::table('return_items')->where('id',$id)->update(['status'=>$status,'reject_reason'=>$reason,
-            'return_shipment_id'=>$id]);
+            $shipment_id=\DB::table('return_shipments')->insertGetId(['vendor_id'=>$rturn_item->order_item->vendor_id,'uuid'=>$returnOrderId,'vendor_order_id'=>$related_vendor_order->id,'type'=>$rturn_item->type]);
+              $newStatus = [
+                    'status' => 'APPROVED','icon'=>'Approved',
+                    'date' =>now(),
+                    'message' => '',
+                ];
+                $existing = \DB::table('return_items')->where('id', $id)->value('return_status_updates');
+                $updates = $existing ? json_decode($existing, true) : [];
+                $updates[] = $newStatus;
+
+                // Update the record
+                DB::table('return_items')
+                    ->where('id', $id)
+                    ->update([
+                        'return_status' => $newStatus['status'],
+                        'return_status_updates' => json_encode($updates),
+                        'status'=>$status,'reject_reason'=>$reason,
+                         'return_shipment_id'=>$shipment_id
+                    ]);
+           
         }else{
             \DB::table('return_items')->where('id',$id)->update(['status'=>$status,'reject_reason'=>$reason,
             'return_shipment_id'=>$related_return_shipment->id]);

@@ -23,7 +23,7 @@
 
 
                     <li class="nav-item @if ($last_uri == 'users') active @endif">
-                        <a href="{{ domain_route('users.index', ['role' => 'Customer']) }}" class="nav-link"
+                        <a href="{{ domain_route('users.index') }}" class="nav-link"
                             data-key="t-crm">
                             Manage
                             Customers </a>
@@ -95,7 +95,24 @@
                         </li>
                     @endif
                     
-                    
+                    <li class="nav-item">
+                    <a class="nav-link menu-link  @if ($last_uri == 'vendor_banks') active @endif"
+                        href="{{domain_route('vendor_banks.index')}}">
+                      <span data-key="t-widgets">Vendor Banks</span>
+                    </a>
+                </li> 
+                    <li class="nav-item">
+                    <a class="nav-link menu-link  @if ($last_uri == 'customer_banks') active @endif"
+                        href="{{domain_route('customer_banks.index')}}">
+                         <span data-key="t-widgets">Customer Banks</span>
+                    </a>
+                </li> 
+                <li class="nav-item">
+                    <a class="nav-link menu-link  @if ($last_uri == 'return_items') active @endif"
+                        href="/vendor_settlements">
+                       <span data-key="t-widgets">Vendor Settlement</span>
+                    </a>
+                </li>
                     
                     
 
@@ -109,6 +126,12 @@
             <i class="mdi mdi-package"></i> <span data-key="t-widgets">Products</span>
         </a>
     </li>
+    <li class="nav-item">
+        <a class="nav-link menu-link  @if ($last_uri == 'payments') active @endif"
+            href="/push_notification">
+            <i class="mdi mdi-package"></i> <span data-key="t-widgets">Push Notification</span>
+        </a>
+    </li>
     @if(auth()->id())
        <li class="nav-item">
             <a class="nav-link menu-link" href="#sidebarDashboardsorders" data-bs-toggle="collapse" role="button"
@@ -118,11 +141,17 @@
 
             <div class="collapse menu-dropdown" id="sidebarDashboardsorders">
                 <ul class="nav nav-sm flex-column">
-                    @if (auth()->user()->hasRole(['Admin']) || auth()->user()->can('list_settings'))
+                    @if (auth()->user()->hasRole(['Admin']))
                       <li class="nav-item @if ($last_uri == 'settings') active @endif">
                         <a href="{{ domain_route('vendor_orders') }}" class="nav-link">
 
                             <div data-i18n="Calendar">Vendor Orders</div>
+                        </a>
+                    </li> 
+                      <li class="nav-item @if ($last_uri == 'completed_orders') active @endif">
+                        <a href="{{ domain_route('completed_orders') }}" class="nav-link">
+
+                            <div data-i18n="Calendar">Completed Orders</div>
                         </a>
                     </li> 
                     @endif
@@ -157,8 +186,14 @@
                 </ul>
             </div>
         </li>
+    <li class="nav-item">
+        <a class="nav-link menu-link"
+            href="{{ domain_route('settings.index') }}">
+            <i class="mdi mdi-cog"></i> <span data-key="t-widgets">Setting</span>
+        </a>
+    </li>
    
-    @endif
+        @endif
     @if(!auth()->id())
        <li class="nav-item">
         <a class="nav-link menu-link"
@@ -175,7 +210,7 @@
     </li>
     @endif
  
-
+ 
     @if(auth()->guard('vendor')->id())
     <li class="nav-item">
         <a class="nav-link menu-link"
@@ -183,12 +218,12 @@
             <i class="mdi mdi-lock"></i> <span data-key="t-widgets">Account Setting</span>
         </a>
     </li>
-    <li class="nav-item">
+    <!-- <li class="nav-item">
         <a class="nav-link menu-link"
             href="/bank">
             <i class="mdi mdi-bank"></i> <span data-key="t-widgets">Bank Details</span>
         </a>
-    </li>
+    </li> -->
     <!-- <li class="nav-item">
         <a class="nav-link menu-link"
             href="/commission">
@@ -209,8 +244,21 @@
                 <i class="mdi mdi-credit-card-outline"></i> <span data-key="t-widgets">Payments</span>
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link menu-link  @if ($last_uri == 'tickets') active @endif" href="/tickets">
+                <i class="mdi mdi-credit-card-outline"></i> <span data-key="t-widgets">Support Tickets</span>
+            </a>
+        </li>
     @endif
    
+@if(auth()->user())
+            <li class="nav-item @if($last_uri=='training_videos') active  @endif">
+              <a href="{{domain_route('training_videos.index')}}" class="nav-link">
+               
+                <i class="mdi mdi-youtube"></i> <span data-key="t-widgets">Training  Videos</span>
+              </a>
+            </li>
+     @endif
    
     @if (auth()->id())
         <li class="nav-item">
@@ -225,6 +273,7 @@
                 <i class="mdi mdi-credit-card-outline"></i> <span data-key="t-widgets">App Front</span>
             </a>
         </li>
+       
     @endif
     
    
@@ -271,7 +320,11 @@
         </li>
   
    
-    
+     <li class="nav-item">
+            <a class="nav-link menu-link text-danger fw-bold  @if ($last_uri == 'logout') active @endif" href="/logout">
+                <i class="mdi mdi-logout"></i> <span data-key="t-widgets">Logout</span>
+            </a>
+        </li>
    
       
 
@@ -284,5 +337,4 @@
    
 
 </ul>
-
 

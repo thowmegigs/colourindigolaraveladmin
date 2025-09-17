@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CollectionRequest;
 use App\Models\Collection;
 use Image;
+use DB;
 use \Illuminate\Http\Request;
 
 class CollectionController extends Controller
@@ -25,11 +26,20 @@ class CollectionController extends Controller
         $this->has_popup = 1;
         $this->has_detail_view = 0;
         $this->has_side_column_input_group = 0;
+        $this->dimensions=[
+            
+                'tiny'  => 200,
+                'small' => 350,
+                'medium' => 550,
+                'large'=>750
+               
+            
+        ];
         $this->form_image_field_name = [
             [
                 'field_name' => 'image',
                 'single' => true,
-                'has_thumbnail' => false,
+                'has_thumbnail' => true,
             ],
         ];
 
@@ -159,7 +169,7 @@ class CollectionController extends Controller
                     'tag' => 'input',
                     'type' => 'file',
                     'default' => '',
-                    'attr' => $g['single'] ? [] : ['multiple' => 'multiple'],
+                    'attr' => $g['single'] ? [] : ['multiple' => 'multiple'],'col'=>12
                 ];
                 array_push($data[0]['inputs'], $y);
             }
@@ -301,6 +311,10 @@ class CollectionController extends Controller
                                 'name' => 'Tag'
                             ],
                             (object) [
+                                'id' => 'Brand',
+                                'name' => 'Brand'
+                            ],
+                            (object) [
                                 'id' => 'Discount',
                                 'name' => 'Discount'
                             ],
@@ -323,15 +337,15 @@ class CollectionController extends Controller
                         'options' => [
                             (object) [
                                 'id' => 'Eq',
-                                'name' => 'Eq'
+                                'name' => 'Equalt To '
                             ],
                             (object) [
                                 'id' => 'Gt',
-                                'name' => 'Gt'
+                                'name' => 'Greater than'
                             ],
                             (object) [
                                 'id' => 'Lt',
-                                'name' => 'Lt'
+                                'name' => 'Less than'
                             ],
                             
                         ],
@@ -469,47 +483,13 @@ class CollectionController extends Controller
             'has_detail_view' => $this->has_detail_view,
             'repeating_group_inputs' => $repeating_group_inputs,
             'toggable_group' => $toggable_group,
+              'thumbnailDimensions'=>$this->dimensions
         ];
 
         return $data;
 
     }
-   public function afterCreateProcessBase($request, $post, $model, $meta_info)
-    {
-        /*Use this function even when saving only related
-        HasMny or many to many table from other contrller function like adding comments from single
-        post page using ajax,place this function there
-        or assigning vendror to porducts in case of many to many then in ajax call place there but column name shoul be in model_relations
-         */
-       
-         $seoFileNameWithoutExtension =null;
-        if($request->has('name')){
-            
-          $seoFileNameWithoutExtension=\Str::slug($request->input('name')) . '-' . time() ;
-        
-        }
-       if ($meta_info['has_image']) {
-            foreach ($meta_info['image_field_names'] as $item) {
-
-                $field_name = $item['field_name'];
-                $single = $item['single'];
-                $has_thumbnail = $item['has_thumbnail'];
-                if ($request->hasfile($field_name)) {
-
-                    $image_name = $this->upload1($request->file($field_name), $field_name,$seoFileNameWithoutExtension);
-                    if ($image_name) {
-                        $model->{$field_name} = $image_name;
-                        $model->save();
-                    }
-
-                }
-
-            }
-
-        }
-
-        return $post;
-    }
+  
     public function afterCreateProcess($request, $post, $model)
     {
         $meta_info = $this->commonVars()['data'];
@@ -692,6 +672,7 @@ class CollectionController extends Controller
 
         try {
             $post = $request->all();
+           // dd($post);
              if (empty($post['category_id'][0])) {
                  $post['category_id'] = null;
              }
@@ -709,17 +690,24 @@ class CollectionController extends Controller
             // if (!empty($post['category_id'])) {
             //      $post['category_id'] = json_encode($post['category_id']);
             // }
+          //  dd($post);
             if (!empty($post['product_id'])) {
                 $ids = json_decode($post['product_id']);
-                if($post['product_show_only_in_collection']=='Yes'){
-                    \DB::table('products')->whereIn('id', $ids)->update(['visibilty'=>'Collection Only']);   
-                }
-                $array = \DB::table('products')->whereIn('id', $ids)->get();
+                // if($post['product_show_only_in_collection']=='Yes'){
+                //     \DB::table('products')->whereIn('id', $ids)->update(['visibilty'=>'Collection Only']);   
+                // }
+                 $array=\App\Models\Product::with('vendor:id,name')->whereIn('id',$ids)->get();
+
+              
                 $ar = [];
                 foreach ($array  as $item) {
                  
-                    $ar[] = ['id'=> $item->id, 'name' => $item->name,'image'=>$item->image,
-                    'price'=>$item->price,'sale_price'=>$item->sale_price,'discount'=>$item->discount
+                    $ar[] = ['id'=> $item->id, 
+                    'name' => $item->name,
+                    'image'=>$item->image,
+                    'slug'=>$item->slug,
+                    'price'=>$item->price,'sale_price'=>$item->sale_price,
+                    'discount'=>$item->discount,'rating'=>$item->rating,'brand'=>$item->vendor->name
                    ];
                 
                  }
@@ -727,7 +715,7 @@ class CollectionController extends Controller
                 unset($post['product_id']);
                 $post['product_id'] = json_encode($ar);
             }
-           
+         
             $post['slug']=\Str::slug($post['name']);
             // dd($post);
             $collection = Collection::create($post);
@@ -835,12 +823,19 @@ class CollectionController extends Controller
 
             if (!empty($post['product_id'])) {
                 $ids = json_decode($post['product_id']);
-                $names_array = \DB::table('products')->whereIn('id', $ids)->pluck('name', 'id')->toArray();
+              
+                $array =\App\Models\Product::with('vendor:id,name')->whereIn('id',$ids)->get();
+              
                 $ar = [];
-                foreach ($ids as $id) {
-                    $name = isset($names_array[$id]) ? $names_array[$id] : '';
-                    $ar[] = ['id' => $id, 'name' => $name];
-                }
+                foreach ($array  as $item) {
+                 
+                    $ar[] = ['id'=> $item->id, 'name' => $item->name,'image'=>$item->image,
+                    'price'=>$item->price,'sale_price'=>$item->sale_price,
+                     'slug'=>$item->slug,
+                    'discount'=>$item->discount,'rating'=>$item->rating,'brand'=>$item->vendor->name
+                   ];
+                
+                 }
 
                 unset($post['product_id']);
                 $post['product_id'] = json_encode($ar);
@@ -855,7 +850,7 @@ class CollectionController extends Controller
 
                 }
             }
-              $post['slug']=\Str::slug($post['name']);
+            $post['slug']=\Str::slug($post['name']);
             $collection->update($post);
            
             $this->afterCreateProcess($request, $post, $collection);
@@ -866,7 +861,7 @@ class CollectionController extends Controller
             return createResponse(true, $this->crud_title . ' updated successfully', $this->index_url);
         } catch (\Exception $ex) { \Sentry\captureException($ex);
             \DB::rollback();
-            return createResponse(false, $ex->getMessage());
+            return createResponse(false, $ex->getMessage().'===='.$ex->getLine());
         }
     }
 
@@ -910,90 +905,13 @@ class CollectionController extends Controller
         return $this->exportModel('Collection', 'collections', $type, $meta_info);
 
     }
-    public function load_toggle(Request $r)
-    {
-        $value = trim($r->val);
-        $rowid = $r->has('row_id') ? $r->row_id : null;
-        $row = null;
-        if ($rowid) {
-            $model = app("App\\Models\\" . $this->module);
-            $row = $model::where('id', $rowid)->first();
-        }
-        $index_of_val = 0;
-        $is_value_present = false;
-        $i = 0;
-        foreach ($this->toggable_group as $val) {
-
-            if ($val['onval'] == $value) {
-
-                $is_value_present = true;
-                $index_of_val = $i;
-                break;
-            }
-            $i++;
-        }
-        if ($is_value_present) {
-            if ($row) {
-                $this->toggable_group = [];
-
-            }
-            $data['inputs'] = $this->toggable_group[$index_of_val]['inputs'];
-
-            $v = view('admin.attribute_families.toggable_snippet', with($data))->render();
-            return createResponse(true, $v);
-        } else {
-            return createResponse(true, "");
-        }
-
-    }
+   
     public function getImageList($id, $table, $parent_field_name)
     {
 
         return $this->getImageListBase($id, $table, $parent_field_name, $this->storage_folder);
     }
-    // public function storeSingleFile($folder, $filerequest)
-    // {
-    //     $folder = str_replace('\\', '/', $folder);
-    //     $filenameWithExt = $filerequest->getClientOriginalName();
-    //     $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
-    //     $extension = $filerequest->getClientOriginalExtension();
-    //     $filename = time();
-    //     $fileNameToStore = $filename . '.' . $extension;
-
-    //     $destinationPath = public_path('\\storage\\' . $folder . '\\' . $fileNameToStore);
-    //     $destinationPath = str_replace('\\', '/', $destinationPath);
-    //      $img = Image::make($filerequest->getRealPath());
-    //      $img->orientate()->save($destinationPath, 90);
-    //    // tinifyImage($destinationPath);
-    //     return $fileNameToStore;
-    // }
-    // public function upload1($request_files, $fieldname)
-    // {
-
-    //     $uploaded_filename = null;
-    //     if ($request_files != null) {
-    //         if ($fieldname == 'image') {
-    //             $uploaded_filename = $this->storeSingleFile($this->storage_folder, $request_files);
-    //         }
-
-    //     }
-    //     return $uploaded_filename;
-
-    // }
-      public function upload1($filerequest, $fieldname,$seoFileNameWithoutExtension)
-    {
-
-        $uploaded_filename = null;
-        $dim=[
-             'tiny' => ['width' => 300, 'height' => 300],
-       
-            ];
-        $uploaded_filename=storeSingleFileCustomDimension($dim,'collections', $filerequest, true,$seoFileNameWithoutExtension);
-
-        
-        return $uploaded_filename;
-
-    }
+   
     protected function updateInFrontendSectionsWhenCollectionChange($collection){
    
     $web_content_section_rows = \DB::table('content_sections')
@@ -1004,6 +922,18 @@ class CollectionController extends Controller
             ->whereRaw('JSON_CONTAINS(collection_ids, ?)', [json_encode((string) $collection->id)])
             ->get();
     $app_content_section_rows = \DB::table('website_content_sections')
+            ->whereNotNull('collection_ids') // Ensure it's not NULL
+            ->where('collection_ids', '!=', '[]') // Not an empty array
+            ->where('collection_ids', '!=', '[null]') // Not exactly [null]
+          ->whereRaw('JSON_CONTAINS(collection_ids, ?)', [json_encode((string) $collection->id)])
+            ->get();
+     $slider_rows = \DB::table('website_sliders')
+            ->whereNotNull('collection_ids') // Ensure it's not NULL
+            ->where('collection_ids', '!=', '[]') // Not an empty array
+            ->where('collection_ids', '!=', '[null]') // Not exactly [null]
+          ->whereRaw('JSON_CONTAINS(collection_ids, ?)', [json_encode((string) $collection->id)])
+            ->get();
+     $banner_rows = \DB::table('website_banners')
             ->whereNotNull('collection_ids') // Ensure it's not NULL
             ->where('collection_ids', '!=', '[]') // Not an empty array
             ->where('collection_ids', '!=', '[null]') // Not exactly [null]
@@ -1057,6 +987,53 @@ class CollectionController extends Controller
                     ->where('id', $row->id)
                     ->update(['collections1' => json_encode($collectionInfo)]);
             }
+             }
+    
+    }
+    if($slider_rows->count()>0){
+        foreach($slider_rows as $row){
+           
+                $collectionInfo=json_decode($row->json_column,true);
+                foreach ($collectionInfo as &$collection) {
+                    if ($collection['collection_id'] == $collectionId) {
+                        $product = array_merge($product,[
+                             "collection_id"=> $collectionId,
+                             "collection_name"=>  $collection->name,
+                             "slug"=>  $collection->slug,
+                          
+                          
+                        ]);
+                        break;
+                    }
+                }
+                  DB::table('website_sliders')
+                    ->where('id', $row->id)
+                    ->update(['json_column' => json_encode($collectionInfo)]);
+         
+             }
+    
+    }
+    if($banner_rows->count()>0){
+        foreach($banner_rows as $row){
+           
+                $collectionInfo=json_decode($row->json_column,true);
+                foreach ($collectionInfo as &$collection) {
+                   
+                    if ($collection['collection_id'] == $collectionId) {
+                        $collection = array_merge($collection,[
+                             "collection_id"=> $collectionId,
+                             "collection_name"=>  $collection['collection_name'],
+                             "slug"=>  $collection['slug'],
+                          
+                          
+                        ]);
+                        break;
+                    }
+                }
+                  DB::table('website_banners')
+                    ->where('id', $row->id)
+                    ->update(['json_column' => json_encode($collectionInfo)]);
+         
              }
     
     }

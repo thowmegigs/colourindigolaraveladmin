@@ -47,9 +47,9 @@ class Controller extends BaseController
 
         }
     }
-    public function buildFilter(Request $r, $query)
+    public function buildFilter(Request $r, $query,$except=[])
     {
-        $get = $r->all();
+        $get = $r->except($except);
         if (count($get) > 0 && $r->isMethod('get')) {
             unset($get['page']);
             foreach ($get as $key => $value) {
@@ -157,6 +157,8 @@ class Controller extends BaseController
         }
 
         if ($meta_info['has_image']) {
+          $thumbdime=isset($meta_info['thumbnailDimensions'])?$meta_info['thumbnailDimensions']:[]; 
+            // dd($thumbdime);   
             foreach ($meta_info['image_field_names'] as $item) {
 
                 $field_name = $item['field_name'];
@@ -167,13 +169,12 @@ class Controller extends BaseController
                     if (is_array($request->file($field_name))) {
                         $image_model_name = modelName($item['table_name']);
                         $parent_table_field = !empty($item['parent_table_field']) ? $item['parent_table_field'] : null;
-                       
-                     //   $this->upload($request->file($field_name),$has_thumbnail, $model->id, $image_model_name, $parent_table_field,);
-                   $this->upload($request->file($field_name),$has_thumbnail,$seoFileNameWithoutExtension, $model->id, $image_model_name, $parent_table_field,);
+                      //   $this->upload($request->file($field_name),$has_thumbnail, $model->id, $image_model_name, $parent_table_field,);
+                   $this->upload($request->file($field_name),$has_thumbnail, $thumbdime,$seoFileNameWithoutExtension, $model->id, $image_model_name, $parent_table_field);
       
                   
                     } else {
-                        $image_name = $this->upload($request->file($field_name),$has_thumbnail,$seoFileNameWithoutExtension);
+                        $image_name = $this->upload($request->file($field_name),$has_thumbnail, $thumbdime,$seoFileNameWithoutExtension);
                         if ($image_name) {
                             $model->{$field_name} = $image_name;
                             $model->save();
@@ -221,7 +222,7 @@ class Controller extends BaseController
 
     }
 
-    public function upload($request_files,$has_thumbnail,$seoFileNameWithoutExtension=null, $parent_table_id = null, $image_model_name = null, $parent_table_field = null)
+    public function upload($request_files,$has_thumbnail,$thumbnailDimensions=[],$seoFileNameWithoutExtension=null, $parent_table_id = null, $image_model_name = null, $parent_table_field = null)
     {
         //  $this->upload($request->file($field_name),$has_thumbnail,$seoFileNameWithoutExtension, $model->id, $image_model_name, $parent_table_field,);
         //   $this->upload($request->file($field_name),$has_thumbnail,$seoFileNameWithoutExtension);
@@ -230,8 +231,8 @@ class Controller extends BaseController
         if ($request_files != null) {
 
             $uploaded_filename = is_array($request_files) && $parent_table_id ?
-            storeMultipleFile($this->storage_folder, $request_files, $image_model_name, $parent_table_id, $parent_table_field,$has_thumbnail,$seoFileNameWithoutExtension)
-            : storeSingleFile($this->storage_folder, $request_files,$has_thumbnail,$seoFileNameWithoutExtension);
+            storeMultipleFile($this->storage_folder, $request_files, $image_model_name, $parent_table_id, $parent_table_field,$has_thumbnail,$thumbnailDimensions,$seoFileNameWithoutExtension)
+            : storeSingleFile($this->storage_folder, $request_files,$has_thumbnail,$thumbnailDimensions,$seoFileNameWithoutExtension);
             if (!is_array($uploaded_filename)) {
                 return $uploaded_filename;
             }
@@ -242,6 +243,7 @@ class Controller extends BaseController
     }
     public function deleteFileBase($id, $storage_folder)
     {
+      
         foreach ($this->form_image_field_name as $item) {
             $field_name = $item['field_name'];
             $single = $item['single'];
@@ -250,8 +252,11 @@ class Controller extends BaseController
             $parent_table_field = !empty($item['parent_table_field']) ? $item['parent_table_field'] : null;
             if ($single) {
                 $model = $this->module;
+               
                 $mod = app("App\\Models\\$model");
+              
                 $filerow = $mod->findOrFail($id);
+              
                 $image_name = $filerow->{$field_name};
                 $path = storage_path('app/public/' . $this->storage_folder . '/' . $image_name);
                 if (\File::exists($path)) {

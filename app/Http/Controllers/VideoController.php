@@ -4,7 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\VideoRequest;
 use App\Models\Video;
+use App\Models\VideoFile;
 use File;
+use DB;
+use Str;
+use Storage;
 use \Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -104,7 +108,7 @@ class VideoController extends Controller
                     'label' => $g['single'] ? properSingularName($g['field_name']) : properPluralName($g['field_name']),
                     'tag' => 'input',
                     'type' => 'file',
-                    'default' => $g['single'] ? $this->storage_folder . '/' . $model->{$g['field_name']} : json_encode($this->getImageList($model->id, $g['table_name'], $g['parent_table_field'],$this->storage_folder)),
+                    'default' =>ode($this->getImageList($model->id, $g['table_name'], $g['parent_table_field'],$this->storage_folder)),
                     'attr' => $g['single'] ? [] : ['multiple' => 'multiple'],
                 ];
                 array_push($data[0]['inputs'], $y);
@@ -354,14 +358,15 @@ class VideoController extends Controller
     public function create(Request $r)
     {
         $data = $this->createInputsData();  
-    $collections=getList('Collection');
+       
+        $products=getList('Product',['status'=>'Active']);
       
           $view_data = array_merge($this->commonVars()['data'], [
                     'data' => $data,
-                    'collections'=>$collections
+                    'products'=>$products
 
                 ]);
-            
+           
          if($r->ajax()){
            
              if (!can('create_videos')) {
@@ -391,30 +396,38 @@ class VideoController extends Controller
             $post = $request->all();
             $images = $request->file('images');
             $uploaded = [];
+            $uploaded1 = [];
 
-            $collectionIds = $request->input('collection_id', []);
+            $prodIds = $request->input('product_id', []);
 
             foreach ($images as $index => $image) {
                 $extension = $image->getClientOriginalExtension();
-                $filename = 'banner_' . ($collectionIds[$index] ?? 'unknown') . '_' . time() . '_' . \Str::random(6) . '.' . $extension;
+                $filename = 'video_' . ($prodIds[$index] ?? 'unknown') . '_' . time() . '_' . \Str::random(6) . '.' . $extension;
             
                 // Store with custom name
                 $path = $image->storeAs('videos', $filename, 'public');
-        
+                $product=\App\Models\Product::whereId($prodIds[$index])->first();
                 $uploaded[] = [
                     'video' => $filename,
-                    'collection_id' => $collectionIds[$index] ?? null,
+                    'product_id' => $prodIds[$index] ?? null,
+                    'name' => $product?->name ?? null,
+                    'slug' =>$product?->slug ?? null,
+                ];
+                $uploaded1[] = [
+                    'video' => $filename,
+                    'product_id' => $prodIds[$index] ?? null,
                 ];
             }
                  
            $post['json_column']=json_encode($uploaded);
+           $post['product_ids']=json_encode($prodIds);
             
              $websitebanner = Video::create($post);
-             $uploaded=array_map(function($b) use($websitebanner){
+             $uploaded1=array_map(function($b) use($websitebanner){
                  $b['video_id']= $websitebanner->id;
                  return $b;
-             },$uploaded);
-             \DB::table('video_files')->insert($uploaded);
+             },$uploaded1);
+             \DB::table('video_files')->insert($uploaded1);
                $this->afterCreateProcess($request,$post,$websitebanner);
              \DB::commit();
             return createResponse(true, $this->crud_title . ' created successfully', $this->index_url);
@@ -431,10 +444,14 @@ class VideoController extends Controller
         $model = Video::with('videos')->findOrFail($id);
 
         $data = $this->editInputsData($model);
-        $collections=getList('Collection');
+      
+         $products=getList('Product',['status'=>'Active']);
+      
        
         $view_data = array_merge($this->commonVars($model)['data'], [
-            'data' => $data, 'model' => $model,'collections'=>$collections
+            'data' => $data, 'model' => $model,
+          
+            'products'=>$products
 
         ]);
        
@@ -493,98 +510,110 @@ class VideoController extends Controller
         }
         \DB::beginTransaction();
 
-        try
-        {
-            $post = $request->all();
-            
-            $banner = Video::findOrFail($id);
-            
-    $existingIds = $request->input('existing_ids', []);
-    $collectionIds = $request->input('collection_id', []);
-    $uploadedImages = $request->file('images', []);
+   try {
+    $banner = Video::findOrFail($id);
 
-    $jsonData = [];
+    $existingIds    =  array_filter($request->input('existing_ids', []));
+    $collectionIds  = $request->input('product_id', []);
+    $uploadedImages =$request->file('images', []);
+
     $savedIds = [];
+    $jsonData = [];
 
-    foreach ($collectionIds as $index => $collectionId) {
-        $imageFile = $uploadedImages[$index] ?? null;
-        $existingId = $existingIds[$index] ?? null;
-        $imagePath = null;
+    // Determine max count based on whichever array is longer
+    $maxCount = count($collectionIds);
+       
 
-        // If existing row
+    for ($index = 0; $index < $maxCount; $index++) {
+        $existingId   = $existingIds[$index] ?? null;
+        $collectionId = $collectionIds[$index] ?? null;
+        $imageFile    = $uploadedImages[$index] ?? null;
+
+        // CASE 1: Update existing row
         if ($existingId) {
-            $row = \App\Models\VideoFile::find($existingId);
-            $path=public_path('storage/videos/'.$row->name);
+            $row = VideoFile::find($existingId);
             if (!$row) continue;
-
-            // Update image if new one uploaded
+             $filename=$row->video;
+            // Replace image if a new one is uploaded
             if ($imageFile) {
-                if ($row->name && file_exists($path)) {
-                    @unlink($path);
+                if ($row->video && Storage::disk('public')->exists('videos/' . $row->video)) {
+                    Storage::disk('public')->delete('videos/' . $row->video);
                 }
 
-                $filename = 'video_' . time() . '_' . \Str::random(6) . '.' . $imageFile->getClientOriginalExtension();
-                $path = $imageFile->storeAs('videos', $filename, 'public');
-                $imagePath = 'storage/' . $path;
-
-                $row->name = $filename;
+                $filename = 'video_' . time() . '_' . Str::random(6) . '.' . $imageFile->getClientOriginalExtension();
+                $imageFile->storeAs('videos', $filename, 'public');
+                $row->video = $filename;
             }
 
-            $row->collection_id = $collectionId ?: null;
+            // Always update collection
+            $row->product_id = $collectionId ?: null;
             $row->save();
 
-            $imagePath = $row->name;
             $savedIds[] = $row->id;
+
+            $collection = $collectionId ? DB::table('products')->find($collectionId) : null;
+            $jsonData[] = [
+                'video' => $filename,
+                'product_id' => $collectionId,
+                'name' => $collection?->name ?? '',
+                'slug' => $collection?->slug ?? '',
+            ];
+          
         }
-        // New row
-        else if ($imageFile) {
-            $filename = 'video_' . time() . '_' . \Str::random(6) . '.' . $imageFile->getClientOriginalExtension();
-            $path = $imageFile->storeAs('videos', $filename, 'public');
-            $imagePath = $filename;
+
+        // CASE 2: New row (only if image uploaded)
+        elseif ($imageFile) {
+           
+            $filename = 'video_' . time() . '_' . Str::random(6) . '.' . $imageFile->getClientOriginalExtension();
+            $imageFile->storeAs('videos', $filename, 'public');
 
             $new = $banner->videos()->create([
                 'video' => $filename,
-                'collection_id' => $collectionId ?: null,
+                'product_id' => $collectionId ?: null,
             ]);
 
             $savedIds[] = $new->id;
+
+            $collection = $collectionId ? DB::table('products')->find($collectionId) : null;
+            $jsonData[] = [
+                'video' => $filename,
+                'product_id' => $collectionId,
+                'name' => $collection?->name ?? '',
+                'slug' => $collection?->slug ?? '',
+            ];
         }
 
-        // Add to JSON either way
-        $jsonData[] = [
-            'video' => $imagePath,
-            'collection_id' => $collectionId ?: null,
-        ];
+        // CASE 3: No image and no existing ID – skip
     }
-  
-    // Delete removed rows
+
+    // Delete removed image rows
     $banner->videos()
         ->whereNotIn('id', $savedIds)
         ->get()
-        ->each(function ($row) {
-            $path=public_path('storage/videos/'.$row->name);
-            if ($row->name && file_exists($path)) {
-                @unlink($path);
+        ->each(function ($image) {
+            if ($image->video && Storage::disk('public')->exists('videos/' . $image->video)) {
+                Storage::disk('public')->delete('videos/' . $image->video);
             }
-            $row->delete();
+            $image->delete();
         });
 
-    // Update main record
-                $banner->update([
-                    'name' => $request->name,
-                    'json_column' => json_encode($jsonData),
-                ]);
-        
-        
-            
-        
-             \DB::commit();
-            return createResponse(true, $this->crud_title . ' updated successfully', $this->index_url);
-        } catch (\Exception $ex) { \Sentry\captureException($ex);
-             \DB::rollback();
-            return createResponse(false, $ex->getMessage());
-        }
-    }
+      //  dd($jsonData);
+    // Optional: Save the image data as JSON
+    $banner->update([
+        'name'         => $request->name,
+        'json_column'  => json_encode($jsonData),
+        'product_ids'  => json_encode($collectionIds),
+    ]);
+
+    DB::commit();
+    return createResponse(true, 'Website banner updated successfully.');
+} catch (\Exception $e) {
+    DB::rollBack();
+    return createResponse(false, 'Update failed: ' . $e->getMessage());
+}
+
+}
+  
     private function processForm(Request $request, $existing = []) {
         $images = $request->file('images', []);
         $collectionIds = $request->input('collection_id', []);
@@ -618,20 +647,22 @@ class VideoController extends Controller
         
         try
         {
-            dd($id);
-            $banner=Video::with('images')->where('id',$id)->first();
+           
+            $banner=Video::with('videos')->where('id',$id)->first();
+          
             if($banner){
                $banner->delete();
-               foreach ($banner->images as $image) {
+               foreach ($banner->videos as $image) {
                 // Delete image file from public storage
-                $path=public_path('storage/videos/'.$image->name);
-                if ($image->name && file_exists($path)) {
+                $path=public_path('storage/videos/'.$image->video);
+                if ($image->video && file_exists($path)) {
                     @unlink($path);
                 }
+
             }
     
             // Delete related records from database
-            $banner->images()->delete();
+           $banner->videos()->delete();
         }
              
             if($this->has_upload){

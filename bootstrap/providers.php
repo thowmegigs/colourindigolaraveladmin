@@ -2,7 +2,7 @@
 
 return [
     App\Providers\AppServiceProvider::class,
-    Spatie\Html\HtmlServiceProvider::class,
+    App\Providers\HorizonServiceProvider::class,
     MongoDB\Laravel\MongoDBServiceProvider::class,
-
+    Spatie\Html\HtmlServiceProvider::class,
 ];

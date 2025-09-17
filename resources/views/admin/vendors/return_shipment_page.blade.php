@@ -138,7 +138,7 @@
 
         </tr>
          @endforeach
-    <td colspan='7'>{!! $list->links() !!}</td>
+    <td colspan='10'>{!! $list->links() !!}</td>
     </tr>
 @else
     <tr>

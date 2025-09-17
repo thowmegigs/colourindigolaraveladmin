@@ -6,8 +6,10 @@
 @if (!empty($data))
     @php
         $count = 0;
+         unset($_GET['page']);
+          unset($_GET['delivery_status']);
         if (count($_GET) > 0) {
-            unset($_GET['page']);
+           
             foreach ($_GET as $k => $v) {
                 if (!empty($v)) {
                     $count++;
@@ -18,9 +20,9 @@
     @endphp
 
     <div class="" id="filter">
-        <button type="button" class="rounded-0 btn btn-outline-primary" data-bs-toggle="modal"
+        <button type="button" class="rounded-sm btn btn-outline-primary" data-bs-toggle="modal"
             data-bs-target="#filter_modal">
-            <i class="bx bx-filter-alt"></i>&nbsp;&nbsp;Filter {!! $count > 0 ? '<span class="badge bg-info text-white" style="padding:3.8px 4.8px">' . $count . '</span>' : '' !!}
+            <i class="bi bi-funnel"></i>&nbsp;&nbsp;Filter {!! $count > 0 ? '<span class="badge bg-secondary text-white" style="padding:3.8px 4.8px">' . $count . '</span>' : '' !!}
         </button>
         <div id="filter_modal" class="modal fade" role="dialog" data-bs-focus="false">
             <div class="modal-dialog">
@@ -30,7 +32,7 @@
                     <div class="modal-content" style="max-height:600px;overflow-y:auto">
                         <div class="modal-header">
 
-                            <b>Filter List</b><a class="ml-2 btn btn-sm btn-primary" style="margin-left:5px"
+                            <b>Filter List</b><a class="ml-2 btn btn-sm btn-primary rounded-full" style="border-radius:5px;margin-left:5px"
                                 href="{{ request()->url() }}">Reset </a>
                            
                         </div>
@@ -99,8 +101,8 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="submit" class="btn btn-primary rounded-0">Submit</button>
-                <button type="button" class="btn btn-danger rounded-0" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary rounded-sm">Submit</button>
+                <button type="button" class="btn btn-danger rounded-sm" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
         </form>

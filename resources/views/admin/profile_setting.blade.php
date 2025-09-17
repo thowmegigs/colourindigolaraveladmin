@@ -25,12 +25,13 @@
                             <tr>
                                 <th style="width: 30%">Status</th>
                                 <td>
-                                    <x-status :status="$me->status" />
-                                    @if($me->status=='Rejected')
+                                    {{$me->is_verified}}
+                                   {{-- @if($me->is_verified=='No')
                                         <div class="mt-2 alert alert-danger">
                                             {{ $me->rejection_reason }}
                                         </div>
-                                    @endif</td>
+                                    @endif--}}
+                                </td>
                             </tr>
                             <tr>
                                 <th style="width: 40%">Business Name</th>

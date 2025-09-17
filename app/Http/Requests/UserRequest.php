@@ -20,10 +20,10 @@ class UserRequest extends FormRequest
             'password' => 'sometimes',
             'state_id' => 'nullable|numeric',
             'city_id' => 'nullable|numeric',
-            'pincode' => 'required|numeric',
-            'address' => 'required',
+            'pincode' => 'nullable|numeric',
+            'address' => 'nullable',
             'image' => 'image|nullable',
-            'status' => 'nullable', 'role' => 'required',
+            'status' => 'nullable'
         ];
     }
 }

@@ -31,14 +31,12 @@ class ProductObserver
             $product->variants->each->unsearchable();
         }
           $productId = $product->id;
-
-            $product->variants()->delete();
             $product->reviews()->delete();
 
             $tables = ['website_content_sections', 'content_sections'];
 
             foreach ($tables as $table) {
-                DB::table($table)
+                \DB::table($table)
                     ->whereJsonContains('product_ids', $productId)
                     ->get()
                     ->each(function ($record) use ($productId, $table) {
@@ -47,7 +45,7 @@ class ProductObserver
                         $ids = array_filter($ids, fn($id) => $id != $productId);
 
                         if (empty($ids)) {
-                            DB::table($table)->where('id', $record->id)->update(['deleted_at' => now()]);
+                            DB::table($table)->where('id', $record->id)->delete();
                         } else {
                             DB::table($table)->where('id', $record->id)->update([
                                 'product_ids' => json_encode(array_values($ids))
@@ -60,7 +58,7 @@ class ProductObserver
                             $items = array_filter($items, fn($item) => $item['id'] != $productId);
 
                             if (empty($items)) {
-                                DB::table($table)->where('id', $record->id)->update(['deleted_at' => now()]);
+                                DB::table($table)->where('id', $record->id)->delete();
                             } else {
                                 DB::table($table)->where('id', $record->id)->update([
                                     'products1' => json_encode(array_values($items))
@@ -84,24 +82,6 @@ class ProductObserver
                     });
             }
 
-            DB::table('collections')
-                        ->whereJsonContains('product_id', $productId)
-                        ->get()
-                        ->each(function ($record) use ($productId, $table) {
-                
-                  
-                                $items = json_decode($record->product_id, true);
-                                $items = array_filter($items, fn($item) => $item['id'] != $productId);
-
-                                if (empty($items)) {
-                                    DB::table('collections')->where('id', $record->id)->update(['deleted_at' => now()]);
-                                } else {
-                                    DB::table($table)->where('id', $record->id)->update([
-                                        'products1' => json_encode(array_values($items))
-                                    ]);
-                                }
-                            
-                
-            });
+            
     }
 }

@@ -27,6 +27,22 @@
                     <td>
                         <x-status :status='$r->{$t}' />
                     </td>
+                @elseif ($t=='bank_name')
+                    <td>
+                        {{$r->customer_bank?->bank_name}}
+                    </td>
+                @elseif ($t=='account_number')
+                    <td>
+                        {{$r->customer_bank?->account_number}}
+                    </td>
+                @elseif ($t=='account_holder')
+                    <td>
+                        {{$r->customer_bank?->account_holder}}
+                    </td>
+                @elseif ($t=='ifsc')
+                    <td>
+                        {{$r->customer_bank?->ifsc}}
+                    </td>
                 @elseif(str_contains($t, '_at') || str_contains($t, 'date'))
                     <td>{{ formateDate($r->{$t}) }}</td>
                   @elseif(isFieldPresentInRelation($model_relations, $t) >= 0)
@@ -104,32 +120,11 @@
                     </td>
                 @endif
             @endforeach
-            <td>{{implode(',',$r->getRoleNames()->toArray())}}</td>
-            <td>
-               @if (auth()->user()->hasRole(['Admin']) ||
-                        auth()->user()->can('view_' . $plural_lowercase))
-                <a class="btn btn-success btn-icon" title="View"
-                    href="javascript:viewRecord('{!! $r->id !!}','{!! $viewurl !!}','{!!strtolower($module)!!}')">
-                    <i class="bx bx-dice-4"></i>
-                </a>
-                @endif
-               
-               
-                {{-- <div class="dropdown">
-                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i
-                            class="bx bx-dots-vertical-rounded"></i></button>
-                    <div class="dropdown-menu">
-                             <a class="dropdown-item" href="javascript:viewRecord('{!! $r->id !!}','{!! $viewurl !!}','{!!strtolower($module)!!}');"><i class="bx bx-trophy me-2"></i> View</a>
-                @if (auth()->user()->hasRole(['Admin']) ||
-    auth()->user()->can('edit_' . $plural_lowercase))
-                        <a class="dropdown-item" href="{{ domain_route($plural_lowercase . '.edit', [strtolower($module) => $r->id]) }}"><i class="bx bx-edit-alt me-2"></i> Edit</a>
-                     @endif 
-                       @if (auth()->user()->hasRole(['Admin']) ||
-    auth()->user()->can('delete_' . $plural_lowercase))
-                          <a class="dropdown-item" href="javascript:deleteRecord('{!! $r->id !!}','{!! $deleteurl !!}');"><i class="bx bx-trash me-2"></i> Delete</a>
-                    @endif 
-                     </div>
-                </div> --}}
+          
+             <td>
+                <x-crudButtons :row="$r" :pluralLowercase="$plural_lowercase" :module="$module"
+                 crudTitle="User"
+                    hasPopup="1" showCrudInModal="1" />
             </td>
 
 

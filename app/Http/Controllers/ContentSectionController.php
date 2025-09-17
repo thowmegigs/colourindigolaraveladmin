@@ -19,11 +19,17 @@ class ContentSectionController extends Controller
         $this->is_multiple_upload = 0;
         $this->has_export = 0;
         $this->pagination_count = 100;
-        $this->crud_title = 'Website Content Section';
+        $this->crud_title = 'App Content Section';
         $this->show_crud_in_modal = 1;
         $this->has_popup = 1;
         $this->has_detail_view = 0;
         $this->has_side_column_input_group = 0;
+        $this->dimensions = [
+              'tiny'  => 360,
+              'small' => 480,
+              'medium' => 768,
+            
+            ];
         $this->form_image_field_name = [
             [
                 'field_name' => 'header_image',
@@ -38,22 +44,7 @@ class ContentSectionController extends Controller
                 'save_by_key' => '',
                 'column_to_show_in_view' => 'name',
             ],
-            [
-                'name' => 'categories',
-                'type' => 'BelongsToMany',
-                'column_to_show_in_view' => 'name',
-            ],
-            [
-                'name' => 'products',
-                'type' => 'BelongsToMany',
-                'column_to_show_in_view' => 'name',
-            ],
-            [
-                'name' => 'collections',
-                'type' => 'BelongsToMany',
-                'column_to_show_in_view' => 'name',
-            ],
-          
+           
         ];
 
     }
@@ -92,7 +83,7 @@ class ContentSectionController extends Controller
                         'custom_key_for_option' => 'name',
                         'options' => [],
                         'custom_id_for_option' => 'id',
-                        'multiple' => true,
+                        'multiple' => true,'col'=>6
                     ],
                     [
                         'name' => 'collection_ids',
@@ -186,6 +177,45 @@ class ContentSectionController extends Controller
                         'custom_id_for_option' => 'id',
                         'multiple' => false, 'col' => 6,
                     ],
+                     [
+                        'name' => 'show_header',
+                        'label' => 'Show Section Header',
+                        'tag' => 'input',
+                        'type' => 'radio',
+                        'default' => isset($model) && isset($model->show_header) ? $model->show_header : 'No',
+                        'attr' => [],
+                        'value' => [
+                            (object) [
+                                'label' => 'Yes',
+                                'value' => 'Yes',
+                            ],
+                            (object) [
+                                'label' => 'No',
+                                'value' => 'No',
+                            ],
+                        ],
+                        'has_toggle_div' => [],
+                        'multiple' => false,
+                        'inline' => true, 'col' => 6,
+                    ],
+                     [
+                        'placeholder' => 'Choose background color ',
+                        'name' => 'section_color',
+                        'label' => 'Section Background Color',
+                        'tag' => 'input',
+                        'type' => 'color',
+                        'default' => isset($model) ? $model->section_color : "",
+                        'attr' => [], 'col' => '6',
+                    ],
+                     [
+                        'placeholder' => 'set section height',
+                        'name' => 'section_height',
+                        'label' => 'Section Height',
+                        'tag' => 'input',
+                        'type' => 'number',
+                        'default' => isset($model) ? $model->section_height : "",
+                        'attr' => [], 'col' => '6',
+                    ],
                 ],
             ],
         ];
@@ -199,7 +229,7 @@ class ContentSectionController extends Controller
                     'tag' => 'input',
                     'type' => 'file',
                     'default' =>'',
-                    'attr' => $g['single'] ? [] : ['multiple' => 'multiple'],
+                    'attr' => $g['single'] ? [] : ['multiple' => 'multiple'],'col'=>6
                 ];
                 array_push($data[0]['inputs'], $y);
             }
@@ -217,10 +247,17 @@ class ContentSectionController extends Controller
             $ar = (object) ['id' => $list->id, 'name' => $list->code];
             array_push($coupons, $ar);
         }
-        $product_ids= $model->product_ids;
-        $collection_ids = $model->collection_ids?json_decode(json_decode($collection_ids,true),true):[];
+        $product_ids= $model->product_ids?json_decode($model->product_ids,true):[];
+        if(empty($product_ids)){
+              $x= $model->products1?json_decode($model->products1,true):[];
+              if(!empty($x)){
+                $product_ids=array_column($x,'id');
+              }
+        }
+       // dd( $product_ids);
+        $collection_ids = $model->collection_ids?json_decode($model->collection_ids,true):[];
+       
         $coupons_ids = $model->coupon_ids;
-// dd(json_decode(json_decode($collection_ids,true),true));
         $data = [
             [
                 'label' => null,
@@ -231,20 +268,20 @@ class ContentSectionController extends Controller
                         'label' => 'Products',
                         'tag' => 'select',
                         'type' => 'select',
-                        'default' => !empty($product_ids) ? json_decode($product_ids,true) : [],
+                        'default' => !empty($product_ids) ? $product_ids: [],
 
                          'attr' => [],
                         'custom_key_for_option' => 'name',
                         'options' => getList('Product'),
                         'custom_id_for_option' => 'id',
-                        'multiple' => true,
+                        'multiple' => true,'col'=>6
                     ],
                     [
                         'name' => 'collection_ids',
                         'label' => 'Collection',
                         'tag' => 'select',
                         'type' => 'select',
-                        'default' => !empty($collection_ids) ? json_decode($collection_ids,true) : [],
+                        'default' => !empty($collection_ids) ? $collection_ids : [],
                       
                         'attr' => [],
                         'custom_key_for_option' => 'name',
@@ -322,6 +359,58 @@ class ContentSectionController extends Controller
                         'custom_id_for_option' => 'id',
                         'multiple' => false, 'col' => 6,
                     ],
+                    [
+                        'name' => 'vidoe_id',
+                        'label' => 'Select Video ',
+                        'tag' => 'select',
+                        'type' => 'select',
+                        'default' =>$model->vidoe_id,
+                        'attr' => ['class' => 'no-select2'],
+                        'custom_key_for_option' => 'name',
+                        'options' => getList('Video'),
+                        'custom_id_for_option' => 'id',
+                        'multiple' => false, 'col' => 6,
+                    ],
+                  
+                     [
+                        'name' => 'show_header',
+                        'label' => 'Show Section Header',
+                        'tag' => 'input',
+                        'type' => 'radio',
+                        'default' => isset($model) && isset($model->show_header) ? $model->show_header : 'No',
+                        'attr' => [],
+                        'value' => [
+                            (object) [
+                                'label' => 'Yes',
+                                'value' => 'Yes',
+                            ],
+                            (object) [
+                                'label' => 'No',
+                                'value' => 'No',
+                            ],
+                        ],
+                        'has_toggle_div' => [],
+                        'multiple' => false,
+                        'inline' => true, 'col' => 6,
+                    ],
+                     [
+                        'placeholder' => 'Choose background color ',
+                        'name' => 'section_color',
+                        'label' => 'Section Background Color',
+                        'tag' => 'input',
+                        'type' => 'color',
+                        'default' => isset($model) ? $model->section_color : "",
+                        'attr' => [], 'col' => '6',
+                    ],
+                      [
+                        'placeholder' => 'set section height',
+                        'name' => 'section_height',
+                        'label' => 'Section Height',
+                        'tag' => 'input',
+                        'type' => 'number',
+                        'default' => isset($model) ? $model->section_height : "",
+                        'attr' => [], 'col' => '6',
+                    ],
                 ],
             ],
         ];
@@ -333,8 +422,8 @@ class ContentSectionController extends Controller
                     'label' => $g['single'] ? properSingularName($g['field_name']) : properPluralName($g['field_name']),
                     'tag' => 'input',
                     'type' => 'file',
-                    'default' => $g['single'] ? $this->storage_folder . '/' . $model->{$g['field_name']} : json_encode($this->getImageList($model->id, $g['table_name'], $g['parent_table_field'], $this->storage_folder)),
-                    'attr' => $g['single'] ? [] : ['multiple' => 'multiple'],
+                    'default' => $model->{$g['field_name']}?($g['single'] ? $this->storage_folder . '/' . $model->{$g['field_name']} : json_encode($this->getImageList($model->id, $g['table_name'], $g['parent_table_field'], $this->storage_folder))):null,
+                    'attr' => $g['single'] ? [] : ['multiple' => 'multiple'],'col'=>6
                 ];
                 array_push($data[0]['inputs'], $y);
             }
@@ -460,6 +549,7 @@ class ContentSectionController extends Controller
             'has_detail_view' => $this->has_detail_view,
             'repeating_group_inputs' => $repeating_group_inputs,
             'toggable_group' => $toggable_group,
+            'thumbnailDimensions'=>$this->dimensions
         ];
 
         return $data;
@@ -691,7 +781,7 @@ class ContentSectionController extends Controller
              }
              if (isset($post['product_ids'])) {
                     $prodids=json_decode($post['product_ids'],true);
-                    $prods=\DB::table('products')->whereIn('id',$prodids)->get();
+                    $prods=\App\Models\Product::with('vendor:id,name')->whereIn('id',$prodids)->get();
                     $prod_infos=[];
                     foreach($prods as $c){
                     $prod_infos[]=[
@@ -699,7 +789,9 @@ class ContentSectionController extends Controller
                         'price'=>$c->price,'sale_price'=>$c->sale_price,
                         'quantity'=>$c->quantity,
                         'discount'=>$c->discount,'slug'=>$c->slug,
-                        'discount_type'=>$c->discount_type
+                        'discount_type'=>$c->discount_type,
+                        'rating'=>$c->rating,
+                        'brand'=>$c->vendor->name
                         
                     ];
     
@@ -728,7 +820,7 @@ class ContentSectionController extends Controller
                  if(count($prodids)==1){
                 
                     $content_section->collection_products_when_single_collection_set=$prods[0]->product_id;
-                    $content_section->product_ids=$prods[0]->product_id;
+                   // $content_section->product_ids=$prods[0]->product_id;
                   
 
                  }
@@ -771,7 +863,7 @@ class ContentSectionController extends Controller
         $cats = \App\Models\Category::whereNull('category_id')->get()->toArray();
         $s = '';
         $i = 0;
-        $categories = !empty($model->category_ids) ? array_column(json_decode($model->categories, true), 'id') : null;
+        $categories = !empty($model->category_ids) ? json_decode($model->category_ids, true) : null;
         $category_options =$categories?gt_multiple($cats, $i, $s, $categories):gt($cats, $i, $s);
         $view_data = array_merge($this->commonVars($model)['data'], [
             'data' => $data, 'model' => $model, 'category_options' => $category_options,
@@ -860,7 +952,7 @@ class ContentSectionController extends Controller
                 $cat_infos=[];
                 foreach($cats as $c){
                  $cat_infos[]=[
-                     "id"=>$c->id,'name'=>$c->name,'image'=>$c->image
+                     "id"=>$c->id,'name'=>$c->name,'image'=>$c->image,'slug'=>$c->slug
                  ];
  
                 }
@@ -871,18 +963,22 @@ class ContentSectionController extends Controller
                 }
              }
             if (isset($post['products'])) {
-                 $prodids=json_decode($post['products'],true);
-                 $prods=\DB::table('products')->whereIn('id',$prodids)->get();
-                 $prod_infos=[];
-                 foreach($prods as $c){
-                  $prod_infos[]=[
-                      "id"=>$c->id,'name'=>$c->name,'image'=>$c->image,
-                      'price'=>$c->price,'sale_price'=>$c->sale_price,
-                      'quantity'=>$c->quantity
-                     
-                  ];
-  
-                 }
+                 $prodids=json_decode($post['product_ids'],true);
+                    $prods=\App\Models\Product::with('vendor:id,name')->whereIn('id',$prodids)->get();
+                    $prod_infos=[];
+                    foreach($prods as $c){
+                    $prod_infos[]=[
+                        "id"=>$c->id,'name'=>$c->name,'image'=>$c->image,
+                        'price'=>$c->price,'sale_price'=>$c->sale_price,
+                        'quantity'=>$c->quantity,
+                        'discount'=>$c->discount,'slug'=>$c->slug,
+                        'discount_type'=>$c->discount_type,
+                        'rating'=>$c->rating,
+                        'brand'=>$c->vendor->name
+                        
+                    ];
+    
+                    }
                  if(count($prod_infos)>0){
                  $content_section->products1=json_encode($prod_infos);
                  $content_section->product_ids=$post['product_ids'];
@@ -907,7 +1003,7 @@ class ContentSectionController extends Controller
                  if(count($prodids)==1){
                 
                     $content_section->collection_products_when_single_collection_set=$prods[0]->product_id;
-                    $content_section->product_ids=$prods[0]->product_id;
+                //    $content_section->product_ids=$prods[0]->product_id;
                   
 
                  }
@@ -1022,7 +1118,7 @@ class ContentSectionController extends Controller
     }
     public function updateSequence(Request $request)
 {
-    // Validate the incoming order array
+  
     $request->validate([
         'order' => 'required|array',
         'table' => 'required',

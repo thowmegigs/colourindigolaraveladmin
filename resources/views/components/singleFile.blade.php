@@ -39,11 +39,14 @@
         }
     @endphp
     @if ($path)
+    <div >
+            <i class="remove bx bx-trash" @if ($path) onclick="{{ $onclick }}" @endif></i>
         <video controls width="200" height="100" style="margin:5px;">
                 <source src="{{$path}}" type="video/mp4">
                
                 Your browser does not support the video tag.
                 </video>
+    </div>
     @endif
 @else
     @php

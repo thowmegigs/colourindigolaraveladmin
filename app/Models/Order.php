@@ -52,7 +52,7 @@ class Order extends Model
    
     public function applied_coupons(): HasMany
     {
-        return $this->hasMany(AppliedCoupon::class, 'cart_session_id', 'cart_session_id');
+        return $this->hasMany(AppliedCoupon::class, 'order_id', 'id');
     }
      protected static function booted()
     {

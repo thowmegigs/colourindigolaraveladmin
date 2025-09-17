@@ -2,19 +2,13 @@
 @if ($has_image && count($image_field_names) > 0)
     <div class="row">
         @if ($show_crud_in_modal)
-            <div class="col-md-8">
+            <div class="col-md-12">
                 <div class="card">
 
                     <div class="card-body">
                         <div class="card-text">
                             <x-forms :data="$data" column='1' />
-                            @if (count($repeating_group_inputs) > 0)
-                                @foreach ($repeating_group_inputs as $grp)
-                                      <x-repeatable :data="$grp['inputs']" :label="$grp['label']" values="" :index="$loop->index"
-                                            :hide="$grp['hide']" :indexWithModal="$grp['index_with_modal']"  disableButtons="false"
-                                            :modalInputBoxIdWhoseValueToSetInSelect="$grp['modalInputBoxIdWhoseValueToSetInSelect']" />
-                                @endforeach
-                            @endif
+                             <x-imageform :data="$data" column='1' />
 
 
 
@@ -22,16 +16,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card">
-
-                    <div class="card-body">
-                        <div class="card-text">
-                            <x-imageform :data="$data" column='1' />
-                        </div>
-                    </div>
-                </div>
-            </div>
+          
         @else
             <x-forms :data="$data" column='1' />
             <x-imageform :data="$data" column='1' />

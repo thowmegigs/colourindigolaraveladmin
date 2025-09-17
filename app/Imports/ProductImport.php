@@ -37,23 +37,29 @@ class ProductImport implements OnEachRow, WithHeadingRow
         /* -----------------------------------------------------------------
          | 2.  Upsert the parent product
          * -----------------------------------------------------------------*/
+       
+        // $dimension = [
+        //     'width'  => $data['width']  ?? null,
+        //     'height' => $data['height'] ?? null,
+        //     'length' => $data['length'] ?? null,
+        //     'weight' => $data['weight'] ?? null,
+        // ];
         $dimension = [
-            'width'  => $data['width']  ?? null,
-            'height' => $data['height'] ?? null,
-            'length' => $data['length'] ?? null,
-            'weight' => $data['weight'] ?? null,
+            'width'  =>18,
+            'height' => 3,
+            'length' => 20,
+            'weight' =>0.4,
         ];
-        $has_dim=$data['length'] && $data['width'] && $data['height'] && $data['width']  && $data['weight'];
- if (!$has_dim) {
-            throw ValidationException::withMessages([
-                'login' => "Row {$index}: Product Dimesnions height,width,length,weight required",
-            ]);
-        }
-        $product = Product::updateOrCreate(
-            [
-                'sku'       => $data['sku'],
-                'vendor_id' => $vendorId,
-            ],
+//         $has_dim=$data['length'] && $data['width'] && $data['height'] && $data['width']  && $data['weight'];
+//  if (!$has_dim) {
+//             throw ValidationException::withMessages([
+//                 'login' => "Row {$index}: Product Dimesnions height,width,length,weight required",
+//             ]);
+//         }
+ $sizes    = isset($data['sizes'])
+            ? array_filter(array_map('trim', explode(',', $data['sizes'])))
+            : [];
+        $product = Product::create(
             [
                 'name'              => $data['name'],
                 'description'       => $data['description'],
@@ -70,42 +76,50 @@ class ProductImport implements OnEachRow, WithHeadingRow
                     2
                 ),
                 'discount_type'     => 'Percent',
-                'has_variant'       => 'No',                    // will flip later
+                'has_variant'       => !empty($sizes)?'Yes':'No',                    // will flip later
                 'package_dimension' => json_encode($dimension),
-                'status'            => 'In-Active',
-                'meta_keywords'     => $data['meta_keywords']    ?? '',
-                'meta_description'  => $data['meta_description'] ?? '',
+                'status'            => 'Under Review',
+                'attributes'  =>!empty($sizes)? json_encode( [
+                                                [
+                                                    'id' => 3,
+                                                    'name' => 'Size',
+                                                    'value' =>$data['sizes']
+                                                ]
+                                            ]
+                                            ):null,
+                'searchable_attributes'  =>!empty($sizes)? json_encode(['Size'=>$sizes]):null,
+               
+              //  'meta_keywords'     => $data['meta_keywords']    ?? '',
+              ///  'meta_description'  => $data['meta_description'] ?? '',
             ]
         );
 
         /* -----------------------------------------------------------------
          | 3.  Parse comma-separated sizes + SKUs
          * -----------------------------------------------------------------*/
-        $sizes    = isset($data['sizes'])
-            ? array_filter(array_map('trim', explode(',', $data['sizes'])))
-            : [];
+       
 
-        $sizeSkus = isset($data['size_skus'])
-            ? array_filter(array_map('trim', explode(',', $data['size_skus'])))
-            : [];
+        // $sizeSkus = isset($data['size_skus'])
+        //     ? array_filter(array_map('trim', explode(',', $data['size_skus'])))
+        //     : [];
 
-        if ($sizes && count($sizes) !== count($sizeSkus)) {
-            throw ValidationException::withMessages([
-                'sizes' => "Row {$index}: Number of sizes and size SKUs must match.",
-            ]);
-        }
+        // if ($sizes && count($sizes) !== count($sizeSkus)) {
+        //     throw ValidationException::withMessages([
+        //         'sizes' => "Row {$index}: Number of sizes and size SKUs must match.",
+        //     ]);
+        // }
 
         /* -----------------------------------------------------------------
          | 4.  Create / update variants
          * -----------------------------------------------------------------*/
         foreach ($sizes as $i => $size) {
-            $variantSku = $sizeSkus[$i] ?? null;
+            $variantSku = $data['sku']??null;
 
-            if (! $variantSku) {
-                throw ValidationException::withMessages([
-                    'size_skus' => "Row {$index}: Missing SKU for size '{$size}'.",
-                ]);
-            }
+            // if (! $variantSku) {
+            //     throw ValidationException::withMessages([
+            //         'size_skus' => "Row {$index}: Missing SKU for size '{$size}'.",
+            //     ]);
+            // }
 
             ProductVariant::updateOrCreate(
                 [

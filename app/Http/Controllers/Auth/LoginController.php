@@ -15,18 +15,15 @@ class LoginController extends Controller
      *
      * @return Renderable
      */
-    public function show()
+    public function show(Request $request)
     {
-//         $client = SearchClient::create(
-//     env('ALGOLIA_APP_ID'),
-//     env('ALGOLIA_SECRET')
-// );
+//         
+       $host = $request->getHost(); // e.g., admin.example.com
 
-//           $index = $client->initIndex('product_variants');
-
-//          $index->clearObjects();
+      
+        $is_vendor=$host=='vendor.colourindigo.com'?true:false;
         $data['title'] = 'Login';
-        return view('auth.login', with($data));
+        return view(!$is_vendor?'auth.login':'vendor.login', with($data));
     }
 
     /**
@@ -47,21 +44,29 @@ class LoginController extends Controller
            
         };
     }
-    public function login(LoginRequest $request)
-    {
-       
-       $credentials = $request->only('email', 'password');
-        $host = $request->getHost(); // e.g., admin.example.com
+   public function login(LoginRequest $request)
+{
+    $credentials = $request->only('email', 'password');
+    $host = $request->getHost(); // e.g., admin.example.com
 
-        $guard = $this->determineGuard($host);
-      
-        if (\Auth::guard($guard)->attempt($credentials)) {
-            return createResponse(true,'Logged successfully',$guard=='vendor'?route('vendor.dashboard'):route('admin.dashboard'));
+    $guard = $this->determineGuard($host);
+
+    if (\Auth::guard($guard)->attempt($credentials)) {
+        $user = auth()->guard($guard)->user();
+        if ($user->status != 'Active') {
+            return createResponse(false, 'Your account is currently inactive. Please contact support for assistance.');
         }
 
-        return createResponse(false,'Invalid credentials');
-
+        return createResponse(
+            true,
+            'You have successfully logged in.',
+            $guard == 'vendor' ? route('vendor.dashboard') : route('admin.dashboard')
+        );
     }
+
+    return createResponse(false, 'The email or password you entered doesn’t match our records. Please try again.');
+}
+
    public function customer_login(Request $request)
     {
         $cr = ['phone' => $request->phone, 'password' => $request->password];
@@ -74,7 +79,8 @@ class LoginController extends Controller
                 return createResponse(true, 'Logged In Successfully');
             } else {
                 
-                    return createResponse(false, 'Login credentials are invalid');
+                
+                    return createResponse(false, 'Your account is inactive. Please contact the administrator.');
                 
 
             }

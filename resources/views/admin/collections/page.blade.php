@@ -21,6 +21,8 @@
                     <td>
                         <x-status :status='$r->{$t}' />
                     </td>
+                @elseif(str_contains($t, 'product_id'))
+                    <td>dsb</td>
                 @elseif(str_contains($t, '_at') || str_contains($t, 'date'))
                     <td>{{ formateDate($r->{$t}) }}</td>
                 @elseif(isFieldPresentInRelation($model_relations, $t) >= 0)

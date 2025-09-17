@@ -22,20 +22,9 @@ class VendorBank extends Model
     }
     
    
-  
-
-	public function product():BelongsTo
-{
-  return $this->belongsTo(Product::class,'product_id','id')->withDefault()->withTrashed();
-} 
  
-	public function product_variant():BelongsTo
+	public function vendor():BelongsTo
 {
-  return $this->belongsTo(ProductVariant::class,'product_variant_id','id')->withDefault()->withTrashed();
-} 
- 
-	public function user():BelongsTo
-{
-  return $this->belongsTo(User::class,'user_id','id')->withDefault()->withTrashed();
+  return $this->belongsTo(Vendor::class,'vendor_id','id');
 } 
  }

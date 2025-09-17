@@ -21,7 +21,10 @@ class WebsiteBanner extends Model
         return $this->getConnection()->getSchemaBuilder()->getColumnListing($this->getTable());
     }
     
-   
+    public function images():HasMany
+    {
+    return $this->hasMany(WebsiteBannerImage::class,'website_banner_id','id');
+    }
   
 
   

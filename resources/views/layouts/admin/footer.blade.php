@@ -33,13 +33,13 @@
 <script src="{{asset('commonjs/spartan.js')}}"></script>
 <script src="{{ asset('commonjs/formvalidationcommon.js') }}?v=6"></script>
 <script src="{{ asset('commonjs/custom_form_validation.js') }}?v=1"></script>
-<script src="{{ asset('commonjs/commonjs_functions.js') }}?v=3"></script>
+<script src="{{ asset('commonjs/commonjs_functions.js') }}?v=2"></script>
 <script src="{{ asset('commonjs/index_table_sort_pagination.js') }}"></script>
 <script src="{{ asset('commonjs/summernote.min.js') }}"></script>
 <script src="{{ asset('commonjs/repeatable_json_related.js') }}?v=4"></script>
 <script src="{{ asset('commonjs/file_input_related.js') }}?v=3"></script>
 <script src="{{ asset('commonjs/selection_related.js') }}?v=1"></script>
-<script src="{{ asset('commonjs/custom.js') }}?v=2"></script>
+<script src="{{ asset('commonjs/custom.js') }}?v=1"></script>
 
 <script src="{{asset('assets/js/app.js')}}"></script>
 @if(request()->segment(2)=='dashboard' || request()->segment(1)=='dashboard')

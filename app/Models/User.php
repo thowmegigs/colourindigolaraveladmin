@@ -86,5 +86,14 @@ class User extends Authenticatable implements JWTSubject
     {
       return $this->HasOne(BankDetail::class,'user_id','id');
     } 
+     public function customer_bank()
+    {
+      return $this->HasOne(CustomerBank::class,'user_id','id');
+    } 
+     public function address()
+    {
+      return $this->HasOne(Address::class,'user_id','id')->where('is_default','Yes');
+    } 
+    
 
 }

@@ -4,10 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\WebsiteBannerRequest;
 use App\Models\WebsiteBanner;
+use App\Models\WebsiteBannerImage;
 use File;
 use \Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
-
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Imagick\Driver; // or GD
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 class WebsiteBannerController extends Controller
 {
     public function __construct()
@@ -26,6 +31,15 @@ class WebsiteBannerController extends Controller
          $this->has_popup=1;
         $this->has_detail_view =0;
         $this->has_side_column_input_group =0;
+        $this->dimensions= [
+                        'tiny'  => 200,
+                        'small' => 350,
+                        'medium' => 550,
+                        'large'=>750,
+                        'xlarge'=>1200
+
+    
+    ];
         $this->form_image_field_name =[
     
 ];
@@ -197,6 +211,7 @@ class WebsiteBannerController extends Controller
            'has_detail_view'=>$this->has_detail_view,
             'repeating_group_inputs' => $repeating_group_inputs,
             'toggable_group' => $toggable_group,
+            'thumbnailDimensions'=>$this->dimensions
         ];
        
 
@@ -386,40 +401,93 @@ class WebsiteBannerController extends Controller
         return createResponse(false,'Dont have permission to create');
         }
         \DB::beginTransaction();
-
+   $uploadedPaths = [];
         try {
             $post = $request->all();
             $images = $request->file('images');
             $uploaded = [];
+            $uploaded1 = [];
 
             $collectionIds = $request->input('collection_id', []);
+              $manager = new ImageManager(new Driver());
 
-            foreach ($images as $index => $image) {
-                $extension = $image->getClientOriginalExtension();
-                $filename = 'banner_' . ($collectionIds[$index] ?? 'unknown') . '_' . time() . '_' . \Str::random(6) . '.' . $extension;
-            
-                // Store with custom name
-                $path = $image->storeAs('website_banners', $filename, 'public');
+            $sizes = [
+                'tiny'  => 200,
+                'small' => 350,
+                'medium' => 550,
+                'large'=>750,
+                'xlarge'=>1200
+                    ];
+        $folder=$this->storage_folder;
+
+        foreach ($images as $index => $image) {
+            $originalExtension = strtolower($image->getClientOriginalExtension());
+
+            $originalName = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
+            $slug = \Str::slug($originalName); // SEO-friendly
+            $filenameBase = "{$slug}_" . time() . "_" . \Str::random(6);
+            $webpFilename = $filenameBase . '.webp';
+
+            // ✅ Create Intervention Image
+            $img = $manager->read($image->getPathname());
+
+            // ✅ Convert to WebP if not already
+            if ($originalExtension !== 'webp') {
+                $webpContent = $img->toWebp(80);
+            } else {
+                // Just read the raw file if it's already WebP
+                $webpContent = file_get_contents($image->getPathname());
+            }
         
-                $uploaded[] = [
-                    'name' => $filename,
+            $originalPath = "{$folder}/{$webpFilename}";
+            \Storage::disk('public')->put($originalPath, (string) $webpContent);
+
+            // ✅ Generate thumbnails
+            foreach ($sizes as $label => $width) {
+                $thumb = clone $img;
+                $thumb->scaleDown(width: $width)->sharpen(5);
+
+                $thumbName = "{$label}_{$filenameBase}.webp";
+                $thumbPath = "{$folder}/thumbnail/{$thumbName}";
+                 $quality=85;
+                if (\Str::contains($label, 'tiny') || \Str::contains($label, 'small') || \Str::contains($label, 'medium') ) {
+                    $quality=95;
+                    }
+
+                \Storage::disk('public')->put($thumbPath, (string) $thumb->toWebp($quality));
+                 $uploadedPaths[] = $thumbPath;
+            }
+            $collection=$collectionIds[$index]?\DB::table('collections')->where('id',$collectionIds[$index])->first():null;
+            $uploaded[] = [
+                    'image' => $webpFilename,
                     'collection_id' => $collectionIds[$index] ?? null,
-                ];
+                     'collection_name'=>$collection?->name??'',
+                    'slug'=>$collection?->slug??'',
+            ];
+            $uploaded1[] = [
+                    'name' => $webpFilename,
+                    'collection_id' => $collectionIds[$index] ?? null,
+                   
+            ];
             }
                  
            $post['json_column']=json_encode($uploaded);
+         $post['collection_ids'] = json_encode($collectionIds);
             
              $websitebanner = WebsiteBanner::create($post);
-             $uploaded=array_map(function($b) use($websitebanner){
+             $uploaded1=array_map(function($b) use($websitebanner){
                  $b['website_banner_id']= $websitebanner->id;
                  return $b;
-             },$uploaded);
-             \DB::table('website_banner_images')->insert($uploaded);
+             },$uploaded1);
+             \DB::table('website_banner_images')->insert($uploaded1);
                $this->afterCreateProcess($request,$post,$websitebanner);
              \DB::commit();
             return createResponse(true, $this->crud_title . ' created successfully', $this->index_url);
         } catch (\Exception $ex) { \Sentry\captureException($ex);
             \DB::rollback();
+            foreach ($uploadedPaths as $path) {
+        \Storage::disk('public')->delete($path);
+    }
 
             return createResponse(false, $ex->getMessage());
         }
@@ -485,106 +553,182 @@ class WebsiteBannerController extends Controller
       
 
     }
-    
-    public function update(WebsiteBannerRequest $request, $id)
-    {
-         if (!can('edit_website_banners')) {
-        return createResponse(false,'Dont have permission to update');
-        }
-        \DB::beginTransaction();
+ public function update(WebsiteBannerRequest $request, $id)
+{
+    if (!can('edit_website_banners')) {
+        return createResponse(false, 'You do not have permission to update.');
+    }
 
-        try
-        {
-            $post = $request->all();
-            
-            $banner = WebsiteBanner::findOrFail($id);
-            
-    $existingIds = $request->input('existing_ids', []);
-    $collectionIds = $request->input('collection_id', []);
-    $uploadedImages = $request->file('images', []);
+    DB::beginTransaction();
+  try {
+    $banner = WebsiteBanner::findOrFail($id);
+    $manager = new ImageManager(new Driver());
+    $existingIds    =  array_filter($request->input('existing_ids', []));
+    $collectionIds  = $request->input('collection_id', []);
+    $uploadedImages =$request->file('images', []);
 
-    $jsonData = [];
     $savedIds = [];
+    $jsonData = [];
 
-    foreach ($collectionIds as $index => $collectionId) {
-        $imageFile = $uploadedImages[$index] ?? null;
-        $existingId = $existingIds[$index] ?? null;
-        $imagePath = null;
+    // Determine max count based on whichever array is longer
+    $maxCount = count($collectionIds);
+   
+         $folder=$this->storage_folder;
 
-        // If existing row
+    for ($index = 0; $index < $maxCount; $index++) {
+        $existingId   = $existingIds[$index] ?? null;
+        $collectionId = $collectionIds[$index] ?? null;
+        $imageFile    = $uploadedImages[$index] ?? null;
+
+        // CASE 1: Update existing row
         if ($existingId) {
-            $row = \App\Models\WebsiteBannerImage::find($existingId);
-            $path=public_path('storage/website_banners/'.$row->name);
+            $row = WebsiteBannerImage::find($existingId);
             if (!$row) continue;
-
-            // Update image if new one uploaded
+             $webpFilename=$row->name;
+            // Replace image if a new one is uploaded
             if ($imageFile) {
-                if ($row->name && file_exists($path)) {
-                    @unlink($path);
-                }
+                  $originalExtension = strtolower($imageFile->getClientOriginalExtension());
+                  $originalName = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                    $slug = \Str::slug($originalName); // SEO-friendly
+                    $filenameBase = "{$slug}_" . time() . "_" . \Str::random(6);
+                    $webpFilename = $filenameBase . '.webp';
 
-                $filename = 'banner_' . time() . '_' . \Str::random(6) . '.' . $imageFile->getClientOriginalExtension();
-                $path = $imageFile->storeAs('website_banners', $filename, 'public');
-                $imagePath = 'storage/' . $path;
+                    // ✅ Create Intervention Image
+                    $img = $manager->read($imageFile->getPathname());
 
-                $row->name = $filename;
+                    // ✅ Convert to WebP if not already
+                    if ($originalExtension !== 'webp') {
+                        $webpContent = $img->toWebp(80);
+                    } else {
+                        // Just read the raw file if it's already WebP
+                        $webpContent = file_get_contents($imageFile->getPathname());
+                    }
+
+                        $originalPath = "{$folder}/{$webpFilename}";
+                        \Storage::disk('public')->put($originalPath, (string) $webpContent);
+                        $sizes=$this->dimensions;
+
+                        // ✅ Generate thumbnails
+                        foreach ($sizes as $label => $width) {
+                            $thumb = clone $img;
+                            $thumb->scaleDown(width: $width)->sharpen(5);
+
+                            $thumbName = "{$label}_{$filenameBase}.webp";
+                            $thumbPath = "{$folder}/thumbnail/{$thumbName}";
+                            $quality=85;
+                            if (\Str::contains($label, 'tiny') || \Str::contains($label, 'small') || \Str::contains($label, 'medium') ) {
+                                $quality=95;
+                                }
+
+                            \Storage::disk('public')->put($thumbPath, (string) $thumb->toWebp($quality));
+                            $uploadedPaths[] = $thumbPath;
+                        }
+                $row->name = $webpFilename ;
             }
 
+            // Always update collection
             $row->collection_id = $collectionId ?: null;
             $row->save();
 
-            $imagePath = $row->name;
             $savedIds[] = $row->id;
+
+            $collection = $collectionId ? DB::table('collections')->find($collectionId) : null;
+            $jsonData[] = [
+                'image' => $webpFilename ,
+                'collection_id' => $collectionId,
+                'collection_name' => $collection?->name ?? '',
+                'slug' => $collection?->slug ?? '',
+            ];
+          
         }
-        // New row
-        else if ($imageFile) {
-            $filename = 'banner_' . time() . '_' . \Str::random(6) . '.' . $imageFile->getClientOriginalExtension();
-            $path = $imageFile->storeAs('website_banners', $filename, 'public');
-            $imagePath = $filename;
+
+        // CASE 2: New row (only if image uploaded)
+        elseif ($imageFile) {
+            $webpFilename =null;
+             $originalExtension = strtolower($imageFile->getClientOriginalExtension());
+            $originalName = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                    $slug = \Str::slug($originalName); // SEO-friendly
+                    $filenameBase = "{$slug}_" . time() . "_" . \Str::random(6);
+                    $webpFilename = $filenameBase . '.webp';
+
+                    // ✅ Create Intervention Image
+                    $img = $manager->read($imageFile->getPathname());
+
+                    // ✅ Convert to WebP if not already
+                    if ($originalExtension !== 'webp') {
+                        $webpContent = $img->toWebp(80);
+                    } else {
+                        // Just read the raw file if it's already WebP
+                        $webpContent = file_get_contents($imageFile->getPathname());
+                    }
+
+                        $originalPath = "{$folder}/{$webpFilename}";
+                        \Storage::disk('public')->put($originalPath, (string) $webpContent);
+                        $sizes=$this->dimensions;
+
+                        // ✅ Generate thumbnails
+                        foreach ($sizes as $label => $width) {
+                            $thumb = clone $img;
+                            $thumb->scaleDown(width: $width)->sharpen(5);
+
+                            $thumbName = "{$label}_{$filenameBase}.webp";
+                            $thumbPath = "{$folder}/thumbnail/{$thumbName}";
+                            $quality=85;
+                            if (\Str::contains($label, 'tiny') || \Str::contains($label, 'small') || \Str::contains($label, 'medium') ) {
+                                $quality=95;
+                                }
+
+                            \Storage::disk('public')->put($thumbPath, (string) $thumb->toWebp($quality));
+                            $uploadedPaths[] = $thumbPath;
+                        }
 
             $new = $banner->images()->create([
-                'image' => $filename,
+                'name' => $webpFilename,
                 'collection_id' => $collectionId ?: null,
             ]);
 
             $savedIds[] = $new->id;
+
+            $collection = $collectionId ? DB::table('collections')->find($collectionId) : null;
+            $jsonData[] = [
+                'image' => $webpFilename,
+                'collection_id' => $collectionId,
+                'collection_name' => $collection?->name ?? '',
+                'slug' => $collection?->slug ?? '',
+            ];
         }
 
-        // Add to JSON either way
-        $jsonData[] = [
-            'image' => $imagePath,
-            'collection_id' => $collectionId ?: null,
-        ];
+        // CASE 3: No image and no existing ID – skip
     }
-  
-    // Delete removed rows
+
+    // Delete removed image rows
     $banner->images()
         ->whereNotIn('id', $savedIds)
         ->get()
-        ->each(function ($row) {
-            $path=public_path('storage/website_banners/'.$row->name);
-            if ($row->name && file_exists($path)) {
-                @unlink($path);
+        ->each(function ($image) {
+            if ($image->name && Storage::disk('public')->exists('website_sliders/' . $image->name)) {
+                Storage::disk('public')->delete('website_sliders/' . $image->name);
             }
-            $row->delete();
+            $image->delete();
         });
 
-    // Update main record
-                $banner->update([
-                    'name' => $request->name,
-                    'json_column' => json_encode($jsonData),
-                ]);
-        
-        
-            
-        
-             \DB::commit();
-            return createResponse(true, $this->crud_title . ' updated successfully', $this->index_url);
-        } catch (\Exception $ex) { \Sentry\captureException($ex);
-             \DB::rollback();
-            return createResponse(false, $ex->getMessage());
-        }
-    }
+       // dd($jsonData);
+    // Optional: Save the image data as JSON
+    $banner->update([
+        'name'         => $request->name,
+        'json_column'  => json_encode($jsonData),
+        'collection_ids'  => json_encode($collectionIds),
+    ]);
+
+    DB::commit();
+    return createResponse(true, 'Website banner updated successfully.');
+} catch (\Exception $e) {
+    DB::rollBack();
+    return createResponse(false, 'Update failed: ' . $e->getMessage());
+}
+}
+    
+    
     private function processForm(Request $request, $existing = []) {
         $images = $request->file('images', []);
         $collectionIds = $request->input('collection_id', []);
@@ -618,7 +762,7 @@ class WebsiteBannerController extends Controller
         
         try
         {
-            dd($id);
+            
             $banner=WebsiteBanner::with('images')->where('id',$id)->first();
             if($banner){
                $banner->delete();

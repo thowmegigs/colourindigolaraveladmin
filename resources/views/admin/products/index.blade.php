@@ -7,44 +7,44 @@
     <div class="card-header">
       <div class="d-flex justify-content-between flex-wrap">
         <h5>All {{ properPluralName($plural_lowercase) }}</h5>
-
+{{--
         <div class="d-flex">
           <div class="btn-group" role="group" aria-label="Actions">
-            <button type="button" class="rounded-0 btn btn-primary text-white">
+             <button type="button" class="rounded-0 btn btn-primary text-white">
               <a href="{{ domain_route($plural_lowercase . '.create') }}" class="text-decoration-none text-white">
                 <i class="bx bx-plus-circle" style="margin-top:-3px"></i> Add New
               </a>
-            </button>
+            </button> 
 
             @if ($has_export)
               <button type="button" class="mx-1 btn btn-warning" data-bs-toggle="modal" data-bs-target="#importModal">
-                Import Product
+                upload  Product
               </button>
 
               <button type="button" class="mx-1 btn btn-warning" data-bs-toggle="modal" data-bs-target="#importVariantModal">
-                Import Variant
+                Upload Variant
               </button>
 
               <button type="button" class="rounded-0 dt-button buttons-collection btn btn-label-primary dropdown-toggle me-2" data-bs-toggle="dropdown">
-                <span><i class="bx bx-export me-sm-2"></i> <span class="d-none d-sm-inline-block">Export</span></span>
+                <span><i class="bx bx-export me-sm-2"></i> <span class="d-none d-sm-inline-block">Download Spreadsheet</span></span>
               </button>
 
               <ul class="dropdown-menu">
                 <li>
                   <a class="dropdown-item" href="{{ domain_route('products.export_template') }}">
-                    <i class="bx bx-file me-2"></i> Product Template
+                    <i class="bx bx-file me-2"></i> Product Spreadhsheet
                   </a>
                   <a class="dropdown-item" href="{{ domain_route('products.export_variant_template') }}">
-                    <i class="bx bx-printer me-2"></i> Product Variant
+                    <i class="bx bx-printer me-2"></i> Product Variant Spreadhsheet
                   </a>
                   <a class="dropdown-item" href="{{ domain_route('products.export-category') }}">
-                    <i class="bx bx-printer me-2"></i> Category
+                    <i class="bx bx-printer me-2"></i> Check Available Categories
                   </a>
                 </li>
               </ul>
             @endif
           </div>
-        </div>
+        </div>--}}
       </div>
 
       <!-- Import Discount Modal -->
@@ -118,6 +118,7 @@
 
       <div class="d-flex justify-content-between flex-wrap mt-3">
         <x-groupButtonIndexPage 
+        :whichButtonsToHideArray="[]"
           :filterableFields="$filterable_fields" 
           :pluralLowercase="$plural_lowercase" 
           :bulkUpdate="$bulk_update" 

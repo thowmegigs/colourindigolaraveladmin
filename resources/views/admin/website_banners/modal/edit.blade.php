@@ -13,13 +13,14 @@
                                     <input type="hidden" name="existing_ids[]" value="{{ $item->id ?? '' }}">
                                     <input type="file" name="images[]"
                                      class="form-control" >
-                                    <x-singleFile 
-                                    :fileName="$item->name"
-                                modelName="WebsiteCarouselImage" 
-                                    folderName="website_sliders" 
-                                    fieldName="name"
-                                    :rowid="$item->id"
-                                    />
+                                        <x-singleFile 
+                                            :fileName="$item->name"
+                                            modelName="WebsiteBannerImage" 
+                                            folderName="website_banners" 
+                                            fieldName="name"
+                                            :rowid="$item->id"
+                                            />
+                                  
                                 </div></div>
                                 <div class="col">
                                 <div class="mb-3">
@@ -32,7 +33,7 @@
                                         </select>
                                 </div>
                                 </div>
-                                <button type="button" class="btn btn-icon btn-danger btn-sm remove-item position-absolute top-0 end-0 m-2 d-none"><i class="mdi mdi-minus"></i></button>
+                                <button type="button" class="btn btn-icon btn-danger btn-sm remove-item position-absolute top-0 end-0 m-2"><i class="mdi mdi-minus"></i></button>
                             </div>
                     
                     @endforeach

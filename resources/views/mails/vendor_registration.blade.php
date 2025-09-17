@@ -135,7 +135,7 @@
         
         </div>
 
-        <a href="https://vendor.colourindigo.com/" class="button">
+        <a href="https://vendor.colourindigo.com/" class="button" style="color:white">
           Login to Seller Dashboard
         </a>
 

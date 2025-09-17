@@ -10,8 +10,9 @@
                         </div></div>
                         <div class="col">
                         <div class="mb-3">
+                        
                             <label for="product_id" class="form-label">Select Product</label>
-                            <select name="product_ids[]" class="form-select select2" >
+                            <select name="product_id[]" class="form-select select2" >
                                     <option value="">Select Product</option>
                                    @foreach($products as $col)
                                    <option value="{{$col->id}}">{{$col->name}}</option>

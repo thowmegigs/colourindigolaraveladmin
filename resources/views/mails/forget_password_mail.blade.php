@@ -8,99 +8,118 @@
     body {
       margin: 0;
       padding: 0;
-      font-family: Arial, sans-serif;
-      background-color: #fff5f5;
-      color: #3b0a0a;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #fdf5f6;
+      color: #4a0d0d;
     }
+
     .email-container {
       max-width: 600px;
-      margin: auto;
+      margin: 40px auto;
       background-color: #ffffff;
-      border: 1px solid #f5c2c2;
-      border-radius: 8px;
+      border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 0 10px rgba(235, 87, 87, 0.1);
+      border: 1px solid #f1c7c7;
+      box-shadow: 0 8px 24px rgba(186, 22, 84, 0.08);
     }
+
     .header {
-      background-color: #fee2e2;
+      background: linear-gradient(135deg, #fff0f3 0%, #fee2e2 100%);
       color: #7f1d1d;
       padding: 30px 20px 20px;
       text-align: center;
     }
+
     .header img {
       max-width: 120px;
       height: auto;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
+      transition: transform 0.3s ease;
     }
+
+    .header img:hover {
+      transform: scale(1.05);
+    }
+
     .header h1 {
       margin: 0;
-      font-size: 22px;
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
     }
+
     .content {
-      padding: 20px 30px;
+      padding: 25px 30px 30px;
       color: #3b0a0a;
     }
+
     .content h2 {
-      color: #991b1b;
+      color: #a4161d;
+      font-size: 20px;
       margin-top: 0;
+      margin-bottom: 10px;
     }
+
     .content p {
-      font-size: 16px;
-      line-height: 1.5;
+      font-size: 15px;
+      line-height: 1.6;
+      margin: 12px 0;
     }
+
     .reset-button {
       display: inline-block;
-      margin-top: 20px;
-      padding: 12px 25px;
+      margin: 20px 0 10px;
+      padding: 14px 28px;
       font-size: 16px;
-      color: #ffffff;
-      background-color: #dc2626;
+      font-weight: 600;
+      color: #ffffff !important;
+      background-color: #ba1654;
       text-decoration: none;
-      border-radius: 5px;
+      border-radius: 6px;
+      box-shadow: 0 4px 10px rgba(186, 22, 84, 0.2);
+      transition: background-color 0.3s ease, transform 0.2s ease;
     }
+
+    .reset-button:hover {
+      background-color: #a01244;
+      transform: translateY(-2px);
+    }
+
     .footer {
-      background-color: #fef2f2;
+      background-color: #fff6f6;
       color: #7f1d1d;
-      padding: 20px;
+      padding: 18px 25px;
       text-align: center;
       font-size: 12px;
       border-top: 1px solid #f3c3c3;
       line-height: 1.6;
     }
+
     .footer p {
-      margin: 5px 0;
+      margin: 4px 0;
     }
-    .contact-line {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      flex-wrap: wrap;
+
+    .footer a {
+      color: #ba1654;
+      text-decoration: none;
     }
-    .contact-item span {
-      font-weight: bold;
-      margin-right: 5px;
-    }
-    .address {
-      margin-top: 10px;
-      color: #6b0f0f;
-    }
+
     @media only screen and (max-width: 600px) {
       .email-container {
-        width: 100%;
+        margin: 0;
         border-radius: 0;
       }
+
       .header h1 {
         font-size: 20px;
       }
+
       .content h2 {
         font-size: 18px;
       }
+
       .header img {
         max-width: 100px;
-      }
-      .contact-line {
-        flex-direction: column;
-        gap: 5px;
       }
     }
   </style>
@@ -113,12 +132,11 @@
     </div>
     <div class="content">
       <h2>Hello,</h2>
-      <p>You are receiving this email because we received a password reset request for your account.</p>
-      <p>If you did not request this, no further action is required.</p>
-      <a href="{{ $resetUrl ?? $url }}" class="reset-button">Reset Password</a>
+      <p>We received a request to reset your password. Click the button below to set a new password for your account:</p>
+      <a href="{{ $resetUrl ?? $url }}" class="reset-button">Reset Your Password</a>
+      <p>If you did not request this change, please ignore this email — your password will remain unchanged.</p>
     </div>
-     @include('mails.footer')
-     
+    @include('mails.footer')
   </div>
 </body>
 </html>

@@ -12,7 +12,7 @@ function extractTextValueFromPdfInStorage($pdfPath,$which_text_value_to_extract)
      if (!file_exists($pdfPath)) {
         throw new \Exception("PDF file not found at: $pdfPath");
     }
-    $parser = new Parser();
+    $parser = new Parser(); 
     $pdf = $parser->parseFile($pdfPath);
     $text = $pdf->getText();
 
@@ -171,15 +171,21 @@ function getFinalShipmentDimensionsAndWeight($items) {
 
     // Determine final chargeable weight
     $finalWeight = roundUpToHalf(max($actualWeight, $volumetricWeight));
-
-    return [
-        'weight'   => $finalWeight,
-        'length'   => ceil($estimatedLength),
-        'breadth'  => ceil($estimatedBreadth),
-        'height'   => ceil($estimatedHeight),
-        'actual_weight'     => $actualWeight,
-        'volumetric_weight' => $volumetricWeight
-    ];
+    return    [
+            'width'  =>18,
+            'breadth'  =>18,
+            'height' => 3,
+            'length' => 20,
+            'weight' =>0.4,
+        ];
+    // return [
+    //     'weight'   => $finalWeight,
+    //     'length'   => ceil($estimatedLength),
+    //     'breadth'  => ceil($estimatedBreadth),
+    //     'height'   => ceil($estimatedHeight),
+    //     'actual_weight'     => $actualWeight,
+    //     'volumetric_weight' => $volumetricWeight
+    // ];
 }
 function roundUpToHalf($number)
 {
@@ -268,6 +274,16 @@ function monthsArray()
 {
     return ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
+}
+function current_role(): string
+{
+   $roles=auth()->user()?auth()->user()->getRoleNames():auth()->guard('vendor')->user()->getRoleNames();
+   return $roles->isNotEmpty() ? $roles[0] : null;
+}
+function current_user()
+{
+  return auth()->user()?auth()->user():auth()->guard('vendor')->user();
+  
 }
 function schoolSession()
 {
@@ -954,7 +970,7 @@ function convertToWebp($requestFile,$seoFileNameWithoutExtension){
 //     return $fileNameToStore;
 // }
 
-function storeSingleFile($folder,$filerequest, $generateThumbnail = false, $seoFileNameWithoutExtension = null)
+function storeSingleFile($folder,$filerequest, $generateThumbnail = false,$thumbnailDimensions=[], $seoFileNameWithoutExtension = null)
 {
     $folder = str_replace('\\', '/', $folder);
     $originalExtension = strtolower($filerequest->getClientOriginalExtension());
@@ -979,28 +995,28 @@ function storeSingleFile($folder,$filerequest, $generateThumbnail = false, $seoF
     // Handle image files
     if ($originalExtension !== 'webp') {
         $fileNameToStore = $filename . '.webp';
-
+    
         $manager = new ImageManager(Driver::class, autoOrientation: true);
         $image = $manager->read($filerequest->getPathname());
 
-        $webpImage = $image->toWebp(80);
+        $webpImage = $image->toWebp(95);
         \Storage::disk('public')->put($folder . '/' . $fileNameToStore, (string) $webpImage);
 
         if ($generateThumbnail) {
-            generateThumbnail($filerequest, $folder, getThumbnailDimensions(), $filename, 'webp');
+            generateThumbnail($filerequest, $folder,$thumbnailDimensions, $filename, 'webp');
         }
     } else {
         $fileNameToStore = $filename . '.webp';
         $filerequest->storeAs('public/' . $folder, $fileNameToStore);
 
         if ($generateThumbnail) {
-            generateThumbnail($filerequest, $folder, getThumbnailDimensions(), $filename, 'webp');
+            generateThumbnail($filerequest, $folder, $thumbnailDimensions, $filename, 'webp');
         }
     }
 
     return $fileNameToStore;
 }
-function storeMultipleFile($folder, $filerequest, $imagemodel, $parent_id, $parent_key_fieldname, $generate_thumbnail = false,$seoFileNameWithoutExtension=null)
+function storeMultipleFile($folder, $filerequest, $imagemodel, $parent_id, $parent_key_fieldname, $generate_thumbnail = false,$thumbnailDimensions=[],$seoFileNameWithoutExtension=null)
 {
     $generateThumbnail = $generate_thumbnail;
    //dd(func_get_args());
@@ -1033,7 +1049,7 @@ function storeMultipleFile($folder, $filerequest, $imagemodel, $parent_id, $pare
         \Storage::disk('public')->put($folder . '/' . $fileNameToStore, (string) $webpImage);
 
         if ($generateThumbnail) {
-            generateThumbnail($file, $folder, getThumbnailDimensions(), $filename, 'webp');
+            generateThumbnail($file, $folder,$thumbnailDimensions, $filename, 'webp');
         }
 
     } else {
@@ -1045,7 +1061,7 @@ function storeMultipleFile($folder, $filerequest, $imagemodel, $parent_id, $pare
         $file->storeAs('public/' . $folder, $fileNameToStore);
 
         if ($generateThumbnail) {
-            generateThumbnail($file, $folder, getThumbnailDimensions(), $filename, 'webp');
+            generateThumbnail($file, $folder, $thumbnailDimensions, $filename, 'webp');
         }
     }
 
@@ -1061,47 +1077,7 @@ function storeMultipleFile($folder, $filerequest, $imagemodel, $parent_id, $pare
     return $ar_files;
 }
 
-function storeSingleFileCustomDimension($dimension, $folder, $filerequest, $generateThumbnail = false,$seoFileNameWithoutExtension)
-{
-  $folder = str_replace('\\', '/', $folder);
 
-    $originalExtension = strtolower($filerequest->getClientOriginalExtension());
-       $filename =$seoFileNameWithoutExtension?$seoFileNameWithoutExtension . '-' . time():uniqid();
-
-
-    if ($originalExtension !== 'webp') {
-        // Convert to webp
-
-        $fileNameToStore = $filename . '.webp';
-
-        $manager = new ImageManager(Driver::class,
-              autoOrientation: true);// or 'gd' // or 'gd'
-        $image = $manager->read($filerequest->getPathname());
-
-        // Convert & encode image to webp with quality 80
-        $webpImage = $image->toWebp(100);
-        
-        // Save webp image to storage
-        \Storage::disk('public')->put($folder . '/' . $fileNameToStore, (string) $webpImage);
-
-        if ($generateThumbnail) {
-            generateThumbnail($filerequest, $folder,$dimension, $filename, 'webp');
-        }
-
-    } else {
-        // Already webp, store directly with the new filename
-
-        $fileNameToStore = $filename . '.webp';
-
-        // Use storeAs on uploaded file to rename and save
-        $filerequest->storeAs('public/' . $folder, $fileNameToStore);
-
-        if ($generateThumbnail) {
-            generateThumbnail($filerequest, $folder,$dimension, $filename, 'webp');
-        }
-    }
-    return $fileNameToStore;
-}
 function getValidation()
 {
     return [
@@ -1130,52 +1106,8 @@ function getInputs()
 
     ];
 }
-function getThumbnailDimensions()
-{
-    return [
-        'tiny' => ['width' => 50, 'height' => 50],
-        'small' => ['width' => 150, 'height' => 93],
-        'medium' => ['width' => 300, 'height' => 185],
-        'large' => ['width' => 550, 'height' => 340],
-    ];
-}
 
-function storeMultipleFileCustomDimension($dimension, $folder, $filerequest, $imagemodel, $parent_id, $parent_key_fieldname, $generate_thumbnail = false)
-{
-    $folder = str_replace('\\', '/', $folder);
-    $mod = app("App\\Models\\$imagemodel");
-    $files = $filerequest;
-    $i = 0;
-    $ar_files = [];
-    $data = [];
-    chmod(storage_path('app/public/' . $folder), 0755);
-    foreach ($files as $file) {
-        ++$i;
-        $filenameWithExt = $file->getClientOriginalName();
-        $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
-        $extension = $file->getClientOriginalExtension();
-        $filename = uniqid();
-        $fileNameToStore = $filename . '.' . $extension;
-        $path = $file->storeAs('public/' . $folder, $fileNameToStore);
-        tinifyImage(Storage::path('public/' . $folder . '/' . $fileNameToStore));
-        if ($generate_thumbnail) {
-            $variant_path = storage_path('app\\' . $folder . '\\thumbnail');
-            if (!File::isDirectory($path)) {
-                File::makeDirectory($path, 0777, true, true);
 
-            }
-            generateThumbnail($file, $folder, $dimension, $filename, $extension);
-        }
-        array_push($ar_files, $fileNameToStore);
-        //  dd($ar_files);
-        $data[] = [
-            'name' => $fileNameToStore,
-            '' . $parent_key_fieldname . '' => $parent_id, 'created_at' => date("Y-m-d H:i:s")];
-
-    }
-    $mod->insert($data);
-    return $ar_files;
-}
 function generateThumbnail(
     $image_request, $folder,
     $dimensions,
@@ -1198,6 +1130,7 @@ function generateThumbnail(
     //large thumbnail name
     $largethumbnail = null;
     //small thumbnail name
+ 
     if (in_array('tiny', array_keys($dimensions))) {
         $tinythumbnail = 'tiny_'.$filename . '.' . $extension;
     }
@@ -1214,66 +1147,76 @@ function generateThumbnail(
     if (in_array('large', array_keys($dimensions))) {
         $largethumbnail = 'large_'.$filename . '.' . $extension;
     }
+    if (in_array('xlarge', array_keys($dimensions))) {
+        $xlargethumbnail = 'xlarge_'.$filename . '.' . $extension;
+    }
 
     //Upload File
     $base_path = $folder . '/thumbnail';
     // dd(storage_path('app\\' . $folder . '\\thumbnail'));
 
     //chmod(Storage::path('public/' . $base_path), 0755);
+    // if (!empty($tinythumbnail)) {
+    //     $image_request->storeAs('public/' . $base_path, $tinythumbnail);
+    // }
+
+    // if (!empty($smallthumbnail)) {
+    //     $image_request->storeAs('public/' . $base_path, $smallthumbnail);
+    // }
+
+    // if (!empty($mediumthumbnail)) {
+    //     $image_request->storeAs('public/' . $base_path, $mediumthumbnail);
+    // }
+
+    // if (!empty($largethumbnail)) {
+    //     $image_request->storeAs('public/' . $base_path, $largethumbnail);
+    // }
+
+   // chmod(Storage::path('public/' . $base_path), 0755);
     if (!empty($tinythumbnail)) {
-        $image_request->storeAs('public/' . $base_path, $tinythumbnail);
+        $tinythumbnailpath = $base_path . '/' . $tinythumbnail;
+        createThumbnail($image_request,$tinythumbnailpath, $dimensions['tiny']);
     }
 
     if (!empty($smallthumbnail)) {
-        $image_request->storeAs('public/' . $base_path, $smallthumbnail);
-    }
-
-    if (!empty($mediumthumbnail)) {
-        $image_request->storeAs('public/' . $base_path, $mediumthumbnail);
-    }
-
-    if (!empty($largethumbnail)) {
-        $image_request->storeAs('public/' . $base_path, $largethumbnail);
-    }
-
-    chmod(Storage::path('public/' . $base_path), 0755);
-    if (!empty($tinythumbnail)) {
-        $tinythumbnailpath = storage_path('app/public/' . $base_path . '/' . $tinythumbnail);
-        createThumbnail($tinythumbnailpath, $dimensions['tiny']['width'], $dimensions['tiny']['height']);
-    }
-
-    if (!empty($smallthumbnail)) {
-        $smallthumbnailpath =storage_path('app/public/' . $base_path . '/' . $smallthumbnail);
-        createThumbnail($smallthumbnailpath, $dimensions['small']['width'], $dimensions['small']['height']);
+        $smallthumbnailpath =$base_path.'/'.$smallthumbnail;
+        createThumbnail($image_request,$smallthumbnailpath, $dimensions['small']);
     }
     //create medium thumbnail
     if (!empty($mediumthumbnail)) {
-        $mediumthumbnailpath =storage_path('app/public/' . $base_path . '/' . $mediumthumbnail);
-        createThumbnail($mediumthumbnailpath, $dimensions['medium']['width'], $dimensions['medium']['height']);
+        $mediumthumbnailpath =$base_path . '/' . $mediumthumbnail;
+        createThumbnail($image_request,$mediumthumbnailpath, $dimensions['medium']);
 
-        tinifyImage($mediumthumbnailpath);
+     
     }
     //create large thumbnail
     if (!empty($largethumbnail)) {
-        $largethumbnailpath = storage_path('app/public/' . $base_path . '/' . $largethumbnail);
-        createThumbnail($largethumbnailpath, $dimensions['large']['width'], $dimensions['large']['height']);
-        tinifyImage($largethumbnailpath);
+        $largethumbnailpath = $base_path . '/' . $largethumbnail;
+        createThumbnail($image_request,$largethumbnailpath, $dimensions['large']);
+       
+    }
+    if (!empty($xlargethumbnail)) {
+        $largethumbnailpath = $base_path . '/' . $xlargethumbnail;
+        createThumbnail($image_request,$largethumbnailpath, $dimensions['xlarge']['width']);
+       
     }
     // return $filenametostore;
 }
-function createThumbnail($path, $width, $height)
+function createThumbnail($filerequest,$path, $width)
 {
     $manager = new ImageManager(Driver::class,
     autoOrientation: true);
   
-    $img =  $manager->read($path);
-   
-    $img->resize($width, $height, function ($constraint) {
-        $constraint->aspectRatio();
-    });
+    $img =  $manager->read($filerequest);
+    $img->scaleDown(width: $width)->sharpen(5);
+    $quality=85;
+    if (\Str::contains($path, 'tiny') || \Str::contains($path, 'small') || \Str::contains($path, 'medium') ) {
+      $quality=95;
+    }
+    $thumbWebp = $img->toWebp(quality: $quality);
+     \Storage::disk('public')->put($path,(string) $thumbWebp);
   
-    $img->save($path, 100);
-   // $img->reset();
+  
 }
 function createResponse($success, $message, $redirect_url = null)
 {
@@ -1446,12 +1389,18 @@ function getListFromIndexArrayForRadio($arr = []) /* for optinos in select not f
     }
     return $list3;
 }
-function getList($model, $where = [], $by_field = 'name', $append_column = '')
+function getList($model, $where = [], $by_field = 'name',$whereNot=[],$append_column = '')
 {
     $model_class = "\App\Models" . '\\' . trim($model);
     $lists = $model_class::query();
     if (count($where) > 0) {
         $lists = $lists->where($where);
+    }
+    if (count($whereNot) > 0) {
+        foreach ($whereNot as $column => $value) {
+                    $$lists->where($column, '!=', $value);
+                }
+      
     }
     $lists = $lists->get(['id', $by_field]);
 
@@ -1503,7 +1452,7 @@ function getListMaterialWithQty()
 function getListWithRoles($role = 'name')
 {
 
-    $lists = $role == 'Driver'?\App\Models\Driver::role($role)->get(['name', 'id'])->toArray() : \App\Models\User::role($role)->get(['name', 'id'])->toArray();
+    $lists = \App\Models\User::role($role)->get(['name', 'id'])->toArray();
     //dd($lists);
     $list2 = [];
     foreach ($lists as $list) {
@@ -1791,6 +1740,11 @@ function getIndianCurrency(float $number)
 function getCurrency()
 {
     return '₹';
+
+}
+function setting()
+{
+    return \DB::table('settings')->first();
 
 }
 function getTableRecordSum($table, $where, $by_column)

@@ -41,7 +41,9 @@ if (str_contains($host, 'vendor')) {
         <!-- auth page bg -->
         <div class="auth-one-bg-position auth-one-bg" id="auth-particles" 
         @if($is_vendor)
-        style="overflow:hidden!important;height:100vh!important;background-size:cover!important" @endif>
+        style="overflow:hidden!important;height:100vh!important;background-size:cover!important;" 
+        
+        @endif>
            <!-- <div class="bg-overlay" ></div> -->
 
             
