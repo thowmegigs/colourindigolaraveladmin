@@ -26,7 +26,7 @@ class FrontendController extends Controller
    public function needAndroidUpdate(Request $request)
     { 
         
-        return response()->json(['need'=>false,'version'=>'0.0.0']);
+        return response()->json(['need'=>true,'version'=>'0.0.1']);
     }
     public function index(Request $r)
     {

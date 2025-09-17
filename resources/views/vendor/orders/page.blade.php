@@ -41,7 +41,7 @@
                                          </tr>
                                          <tr>
                                              <th>Refund</th>
-                                             <td>-{{ getCurrency() }}{{ $r->additional_refund }}</td>
+                                             <td>-{{ getCurrency() }}{{ $r->refunded_amount }}</td>
                                          </tr>
                                          <tr>
                                              <th>Delivery Charge</th>
@@ -53,7 +53,7 @@
                                          </tr>
                                          <tr>
                                              <th>Net Profit</th>
-                                             <td><strong>{{ getCurrency() }}{{ $r->vendor_total - ($r->additional_refund + $r->shipping_cost + $r->commission_total) }}</strong>
+                                             <td><strong>{{ getCurrency() }}{{ $r->vendor_total - ($r->refunded_amount + $r->shipping_cost + $r->commission_total) }}</strong>
                                              </td>
                                          </tr>
                                      </tbody>
@@ -185,8 +185,17 @@
                                  @endif
                              @else
                                  @if ($r->awb)
-                                     <button class="btn btn-sm btn-success generate-doc"
-                                         data-id="{{ $r->shiprocket_order_id }}" data-type="invoice">Invoice</button>
+                                   
+                                        @if(str_contains($r->courier_name,'AMAZON'))
+                                            <button class="btn btn-sm btn-success generate-doc"
+                                                data-id="{{ $r->shiprocket_order_id }}"
+                                                data-type="invoice">Invoice</button>
+                                        @else
+                                            @if($r->invoice_pdf)
+                                            <a href="{{asset('storage/invoices/'.$r->invoice_pdf)}}" class="btn btn-sm btn-success"
+                                                >Invoice</a>
+                                            @endif
+                                        @endif
 
                                      <a href="/label/{{ $r->id }}" class="btn btn-sm btn-primary">Label</a>
 

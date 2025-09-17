@@ -28,7 +28,19 @@ class DelhiveryService
         ->throw()
         ->json();
 }
-
+protected function request1(string $method, string $uri, array $payload = [])
+{
+    return Http::withHeaders([
+            'Authorization' => 'Token ' . $this->token,
+            'Accept'        => 'application/json',
+            'Content-Type'  => 'application/json',
+        ])
+        ->send(strtoupper($method), "{$this->base}{$uri}", [
+            'json' => $payload,
+        ])
+        ->throw()
+        ->json();
+}
     /**
      * 1. Create Warehouse (Pickup Location)
      */
@@ -54,8 +66,8 @@ class DelhiveryService
                 'return_country'  => 'India',
 
             ];
-       // dd($payload);
-            $response = $this->request('post', "/api/backend/clientwarehouse/{$action}/", $payload);
+     //   dd($payload);
+            $response = $this->request1('post', "/api/backend/clientwarehouse/{$action}/", $payload);
                \DB::table('vendors')->where('id',$vendor->id)->update([
                     'delhivery_pickup_name'=>$pickup_name,
                 ]);
@@ -65,7 +77,7 @@ class DelhiveryService
                 'data'    => $response,
             ];
         } catch (Throwable $e) {
-           /// dd($e->getMessage());
+          
             return [
                 'success' => false,
                 'message' => $e->getMessage(),

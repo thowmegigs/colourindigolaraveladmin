@@ -21,7 +21,7 @@
         box-shadow: 0 0 10px rgba(235, 87, 87, 0.1);
       }
       .header {
-        background-color: #fee2e2;
+        background-color: #ffffff;
         color: #7f1d1d;
         padding: 30px 20px 20px;
         text-align: center;

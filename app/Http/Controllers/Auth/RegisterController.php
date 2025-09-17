@@ -249,7 +249,7 @@ class RegisterController extends Controller
                 if ($oldAddressData !== $newAddressData) {
                      $delhService = app(\App\Services\DelhiveryService::class);
                          $resp = $delhService->createOrUpdateWarehouseAddress($user);
-                  
+                      
                     if (!$resp["success"]) {
                         return redirect()
                             ->back()
@@ -257,14 +257,14 @@ class RegisterController extends Controller
                         
                     }
                     else{
-                    //    $shiprocketService = app(\App\Services\ShiprocketService::class);
-                    //    $resp = $shiprocketService->addPickupLocationOfVendor($user);
-                    //    if (!$resp["success"]) {
-                    //         return redirect()
-                    //             ->back()
-                    //             ->withError($resp["message"]);
+                       $shiprocketService = app(\App\Services\ShiprocketService::class);
+                       $resp = $shiprocketService->addPickupLocationOfVendor($user);
+                       if (!$resp["success"]) {
+                            return redirect()
+                                ->back()
+                                ->withError($resp["message"]);
                         
-                    //       }
+                          }
                     }
                 }
             

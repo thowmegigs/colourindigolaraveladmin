@@ -215,6 +215,7 @@ Route::controller(ShiprocketWebhookController::class)->group(function () {
 $sharedDomains = ["admin.colourindigo.com", "vendor.colourindigo.com"];
 Route::domain("admin.colourindigo.com")->group(function () {
     Route::middleware(["admin"])->group(function () {
+        Route::post("/vendor_order_update", [VendorController::class, "updateVendorOrder"]);
         Route::resource("app-versions", AppVersionController::class)->only([
             "index",
             "edit",

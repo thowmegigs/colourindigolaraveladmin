@@ -138,7 +138,7 @@
                                                             </tr>
                                                             <tr>
                                                                 <th>Refund</th>
-                                                                <td>-{{ getCurrency() }}{{ $r->additional_refund }}</td>
+                                                                <td>-{{ getCurrency() }}{{ $r->refunded_amount }}</td>
                                                             </tr>
                                                             <tr>
                                                                 <th>Delivery Charge</th>
@@ -152,7 +152,7 @@
                                                             <tr>
                                                                 <th>Net Profit</th>
                                                                 <td><strong
-                                                                        id="net-profit-{{ $r->id }}">{{ getCurrency() }}{{ $r->vendor_total - ($r->additional_refund + $r->shipping_cost + $r->commission_total) }}</strong>
+                                                                        id="net-profit-{{ $r->id }}">{{ getCurrency() }}{{ $r->vendor_total - ($r->refunded_amount + $r->shipping_cost + $r->commission_total) }}</strong>
                                                                 </td>
                                                             </tr>
                                                         </tbody>
@@ -323,10 +323,17 @@
                                                         {{ $r->is_approved_by_vendor == 'Yes' ? 'Vendor Accepted' : '' }}
                                                     @endif
                                                 @else
-                                                    @if ($r->awb)
+                                                    @if ($r->awb) 
+                                                    @if(str_contains($r->courier_name,'AMAZON'))
                                                         <button class="btn btn-sm btn-success generate-doc"
                                                             data-id="{{ $r->shiprocket_order_id }}"
                                                             data-type="invoice">Invoice</button>
+                                                    @else
+                                                       @if($r->invoice_pdf)
+                                                      <a href="{{asset('storage/invoices/'.$r->invoice_pdf)}}" class="btn btn-sm btn-success"
+                                                            >Invoice</a>
+                                                       @endif
+                                                    @endif
 
                                                         <a href="/label/{{ $r->id }}"
                                                             class="btn btn-sm btn-primary">Label</a>
@@ -436,15 +443,27 @@
                     <form id="shippingForm">
 
                         <div class="form-group mb-3">
-                            <label for="new_shipping" class="form-label">New Shipping Charge <span
-                                    class="text-danger">*</span></label>
+                            <label for="new_shipping" class="form-label">New Shipping Charge </label>
                             <input type="number" id="new_shipping" class="form-control"
-                                placeholder="Enter new shipping charge" step="0.01" min="0" required>
+                                placeholder="Enter new shipping charge" step="0.01" min="0" >
+                            <div class="invalid-feedback" id="shipping-error"></div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="refund" class="form-label">Refund </label>
+                            <input type="number" id="refund" class="form-control"
+                                placeholder="Enter refund" >
+                            <div class="invalid-feedback" id="refund-error"></div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="new_shipping" class="form-label">Invoice File <span
+                                    class="text-danger">*</span></label>
+                            <input type="file" id="invoice_file" class="form-control"
+                                placeholder="Enter new shipping charge" >
                             <div class="invalid-feedback" id="shipping-error"></div>
                         </div>
 
                         <input type="hidden" id="vendor_order_id">
-                    </form>
+                    </form> 
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -520,89 +539,93 @@
             });
 
             // NEW: Submit shipping charge update
-            $(document).on('click', '#submitShipping', function() {
-                const btn = $(this);
-                const spinner = btn.find('.spinner-border');
-                const vendor_order_id = $('#vendor_order_id').val();
-                const new_shipping = $('#new_shipping').val();
+           $(document).on('click', '#submitShipping', function() {
+    const btn = $(this);
+    const spinner = btn.find('.spinner-border');
 
-                // Validation
-                if (!new_shipping || parseFloat(new_shipping) < 0) {
-                    $('#new_shipping').addClass('is-invalid');
-                    $('#shipping-error').text('Please enter a valid shipping charge');
-                    return;
+    const vendor_order_id   = $('#vendor_order_id').val();
+    const new_shipping      = $('#new_shipping').val();
+    const new_refund        = $('#refund').val(); // assuming you have a refund input
+    const invoice_file      = $('#invoice_file')[0].files[0]; // assuming input type="file" with id="invoice"
+
+    // Validation
+    if (!new_shipping || parseFloat(new_shipping) < 0) {
+        $('#new_shipping').addClass('is-invalid');
+        $('#shipping-error').text('Please enter a valid shipping charge');
+        return;
+    }
+
+    $('#new_shipping').removeClass('is-invalid');
+    $('#shipping-error').text('');
+
+    // Show loading state
+    btn.prop('disabled', true);
+    spinner.removeClass('d-none');
+
+    // Prepare FormData for file upload
+    let formData = new FormData();
+    formData.append('vendor_order_id', vendor_order_id);
+    formData.append('shipping_charge', parseFloat(new_shipping).toFixed(2));
+    if (new_refund) formData.append('refund', parseFloat(new_refund).toFixed(2));
+    if (invoice_file) formData.append('invoice', invoice_file);
+    formData.append('_token', '{{ csrf_token() }}');
+
+    $.ajax({
+        url: '/vendor_order_update', // updated endpoint
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            btn.prop('disabled', false);
+            spinner.addClass('d-none');
+
+            if (response.data) {
+                // Update the UI
+                const currency = '{{ getCurrency() }}';
+                $('#shipping-cost-' + vendor_order_id).text('-' + currency + parseFloat(response.data.shipping_charge).toFixed(2));
+                if (response.data.refund !== null) {
+                    $('#refund-' + vendor_order_id).text(currency + parseFloat(response.data.refund).toFixed(2));
                 }
 
-                $('#new_shipping').removeClass('is-invalid');
-                $('#shipping-error').text('');
+                // Close modal
+                $('#shippingModal').modal('hide');
 
-                // Show loading state
-                btn.prop('disabled', true);
-                spinner.removeClass('d-none');
-
-                $.ajax({
-                    url: '/singleFieldUpdateFromTable',
-                    type: 'POST',
-                    data: {
-                        table: 'vendor_orders',
-                        val: parseFloat(new_shipping).toFixed(2),
-                        field: 'shipping_cost',
-                        id: vendor_order_id,
-
-                        _token: '{{ csrf_token() }}'
-                    },
-                    success: function(response) {
-                        btn.prop('disabled', false);
-                        spinner.addClass('d-none');
-
-                        if (response.success) {
-                            // Update the UI with new shipping cost
-                            const currency = '{{ getCurrency() }}';
-                            const newShippingFormatted = currency + parseFloat(new_shipping)
-                                .toFixed(2);
-                            $('#shipping-cost-' + vendor_order_id).text('-' +
-                                newShippingFormatted);
-
-                            // Update the data attribute for the link
-
-                            // Close modal
-                            $('#shippingModal').modal('hide');
-
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: 'Shipping charge updated successfully!',
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: response.message ||
-                                    'Failed to update shipping charge'
-                            });
-                        }
-                    },
-                    error: function(xhr) {
-                        btn.prop('disabled', false);
-                        spinner.addClass('d-none');
-
-                        let errorMessage = 'Failed to update shipping charge';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            errorMessage = xhr.responseJSON.message;
-                        } else if (xhr.responseText) {
-                            errorMessage = xhr.responseText;
-                        }
-
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: errorMessage
-                        });
-                    }
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Vendor order updated successfully!',
+                    timer: 2000,
+                    showConfirmButton: false
                 });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to update vendor order'
+                });
+            }
+        },
+        error: function(xhr) {
+            btn.prop('disabled', false);
+            spinner.addClass('d-none');
+
+            let errorMessage = 'Failed to update vendor order';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMessage = xhr.responseJSON.message;
+            } else if (xhr.responseText) {
+                errorMessage = xhr.responseText;
+            }
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: errorMessage
             });
+        }
+    });
+});
+
 
 
 

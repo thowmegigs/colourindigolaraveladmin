@@ -1757,6 +1757,46 @@ public function vendor_bank_form(Request $request, $id = null)
             return view("vendor.settlements.index", $view_data);
         }
     }
+public function updateVendorOrder(Request $request)
+{
+    // ✅ Validate inputs
+    $request->validate([
+        'vendor_order_id'        => 'required|integer|exists:vendor_orders,id',
+        'shipping_charge'  => 'nullable|numeric',
+        'refund'           => 'nullable|numeric',
+        'invoice'          => 'nullable|file|mimes:pdf|max:2048', // only pdf up to 2MB
+    ]);
+
+    // ✅ Find vendor order by vendor_id
+    $vendorOrder = \App\Models\VendorOrder::where('id', $request->vendor_order_id)->firstOrFail();
+
+    // ✅ Handle invoice upload
+    if ($request->hasFile('invoice')) {
+        $file     = $request->file('invoice');
+        $filename = 'invoice_' . $request->vendor_order_id . '_' . time() . '.pdf';
+        $path     = $file->storeAs('invoices', $filename, 'public');
+
+        $vendorOrder->invoice_pdf = $filename; // assumes a column for invoice file
+    }
+
+    // ✅ Update shipping_charge and refund
+    if ($request->has('shipping_charge')) {
+        $vendorOrder->shipping_cost = $request->shipping_charge;
+    }
+
+    if ($request->has('refund')) {
+      
+        $vendorOrder->refunded_amount = $request->refund;
+    }
+
+    // ✅ Save changes
+    $vendorOrder->save();
+
+    return response()->json([
+        'message' => 'Vendor order updated successfully.',
+        'data'    => $vendorOrder
+    ], 200);
+}
 
 
 }
